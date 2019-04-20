@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
 
 public class HAPITester {
     // Create a context for DSTU2
@@ -18,7 +17,41 @@ public class HAPITester {
     private String serverBase = "http://hapi.fhir.org/baseDstu3/";
     private Connection conn = null;
 
-    public void HAPITester() {
+    // xxxConceptSourceId numbers come from OMOP-provided reference data
+    private int GenderConceptSourceId = 44819108;
+    private enum GenderConcept {
+        // Not an exhaustive list, just a sample for testing purposes
+         FEMALE   (8532),
+         MALE     (8507),
+         OTHER    (8521),
+         AMBIGUOUS(8570),
+         UNKNOWN  (8551);
+
+        GenderConcept(int i) { }
+    };
+
+    private int RaceConceptSourceId = 44819109;
+    private enum RaceConcept {
+        // Not an exhaustive list, just a sample for testing purposes
+        CAUCASIAN(4185154),
+        BLACK(4211480),
+        HISPANIC(4188159),
+        ASIAN(4211353),
+        INDIANS(4276043),
+        NOT_STATED(4190758);
+
+        RaceConcept(int i) { }
+    };
+
+    private int EthnicityConceptSourceId = 44819134;
+    private enum EthnicityConcept {
+        NOT_HISPANIC_OR_LATINO(38003564),
+        HISPANIC_OR_LATINO(38003563);
+
+        EthnicityConcept(int i) { }
+    };
+
+    public HAPITester() {
         try {
             conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/ohdsi", "postgres", "postgres");
         } catch (SQLException e) {
@@ -29,7 +62,7 @@ public class HAPITester {
     void GetVitalSigns() {
         IGenericClient client = ctx.newRestfulGenericClient(serverBase);
 
-        // Perform a search
+        // Perform a search for vital signs
         Bundle bundle = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("code").exactly().systemAndCode("http://loinc.org", "8480-6"))
                 .include(new Include("Observation:encounter"))
@@ -38,9 +71,12 @@ public class HAPITester {
                 .limitTo(10)
                 .execute();
 
+        // Bail if nothing returned
         if (bundle.getEntry().isEmpty())
             return;
 
+        // Build list of different types of resources involved in vital signs,
+        // before inserting them into database in reverse order of dependencies
         List<Patient> patients = new ArrayList<Patient>();
         List<Encounter> encounters = new ArrayList<Encounter>();
         List<Observation> observations = new ArrayList<Observation>();
@@ -74,7 +110,29 @@ public class HAPITester {
             e.printStackTrace();
         }
 
-        String sql = null;
+        String sql = "insert into person"
+                + "(gender_concept_id"
+                + ",year_of_birth"
+                + ",race_concept_id"
+                + ",ethnicity_concept_id"
+                + ",gender_source_concept_id"
+                + ",race_source_concept_id"
+                + ",ethnicity_source_concept_id)"
+                + " values "
+                + "(" + GenderConcept.UNKNOWN
+                + "," + (patient.getBirthDate() == null ? 9999 : patient.getBirthDate().getYear())
+                + "," + RaceConcept.NOT_STATED
+                + "," + EthnicityConcept.NOT_HISPANIC_OR_LATINO
+                + "," + GenderConceptSourceId
+                + "," + RaceConceptSourceId
+                + "," + EthnicityConceptSourceId + ")";
+
+        try {
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         /*
                                                                     Table "public.person"
                    Column            |            Type             | Collation | Nullable |                  Default
@@ -111,27 +169,26 @@ public class HAPITester {
 
         String sql = null;
         /*
-                                                                  Table "public.visit_occurrence"
-            Column             |            Type             | Collation | Nullable |                            Default
--------------------------------+-----------------------------+-----------+----------+---------------------------------------------------------------
- person_id                     | bigint                      |           | not null |
- visit_concept_id              | integer                     |           | not null |
- visit_start_date              | date                        |           |          |
- visit_start_datetime          | timestamp without time zone |           | not null |
- visit_end_date                | date                        |           |          |
- visit_end_datetime            | timestamp without time zone |           | not null |
- visit_type_concept_id         | integer                     |           | not null |
- provider_id                   | bigint                      |           |          |
- care_site_id                  | bigint                      |           |          |
- visit_source_value            | character varying(50)       |           |          |
- visit_source_concept_id       | integer                     |           | not null |
- admitted_from_concept_id      | integer                     |           | not null |
- admitted_from_source_value    | character varying(50)       |           |          |
- discharge_to_source_value     | character varying(50)       |           |          |
- discharge_to_concept_id       | integer                     |           | not null |
- preceding_visit_occurrence_id | bigint                      |           |          |
- visit_occurrence_id           | bigint                      |           | not null | nextval('visit_occurrence_visit_occurrence_id_seq'::regclass)
-
+                                                                          Table "public.visit_occurrence"
+                    Column             |            Type             | Collation | Nullable |                            Default
+        -------------------------------+-----------------------------+-----------+----------+---------------------------------------------------------------
+         person_id                     | bigint                      |           | not null |
+         visit_concept_id              | integer                     |           | not null |
+         visit_start_date              | date                        |           |          |
+         visit_start_datetime          | timestamp without time zone |           | not null |
+         visit_end_date                | date                        |           |          |
+         visit_end_datetime            | timestamp without time zone |           | not null |
+         visit_type_concept_id         | integer                     |           | not null |
+         provider_id                   | bigint                      |           |          |
+         care_site_id                  | bigint                      |           |          |
+         visit_source_value            | character varying(50)       |           |          |
+         visit_source_concept_id       | integer                     |           | not null |
+         admitted_from_concept_id      | integer                     |           | not null |
+         admitted_from_source_value    | character varying(50)       |           |          |
+         discharge_to_source_value     | character varying(50)       |           |          |
+         discharge_to_concept_id       | integer                     |           | not null |
+         preceding_visit_occurrence_id | bigint                      |           |          |
+         visit_occurrence_id           | bigint                      |           | not null | nextval('visit_occurrence_visit_occurrence_id_seq'::regclass)
          */
     }
 
@@ -146,61 +203,60 @@ public class HAPITester {
         Quantity quantity = (Quantity) observation.getValue();
         BigDecimal value = quantity.getValue();
 
-
         String sql = "insert into observation"
-                + " (observation_id"
-                + " ,person_id"
-                + " ,observation_concept_id"
-                + " ,observation_datetime"
-                + " ,observation_type_concept_id"
-                + " ,observation_date"
-                + " ,value_as_number"
-                + " ,value_as_string"
-                + " ,observation_source_concept_id"
-                + " ,obs_event_field_concept_id)"
+                + "(observation_id"
+                + ",person_id"
+                + ",observation_concept_id"
+                + ",observation_datetime"
+                + ",observation_type_concept_id"
+                + ",observation_date"
+                + ",value_as_number"
+                + ",value_as_string"
+                + ",observation_source_concept_id"
+                + ",obs_event_field_concept_id)"
                 + " values"
-                + " (1" //synthetic value
-                + " ,1" //synthetic value
-                + " ,4152194" // systolic blood pressure (SNOMED-CT)
-                + " ,'2019-04-01 10:32:38.918051-04'"
-                + " ,44819029 " // Observable Entity (concept_id from concept_class table)
-                + " ,'4/1/2019'"
-                + " ," + value //get value from FHIR resource
-                + " ,'" + value + "'" //get value from FHIR resource
-                + " ,3016833" // Chart section Set
-                + " ,4152194)"; // systolic blood pressure (SNOMED-CT)
-
-        /*
-                                                                Table "public.observation"
-            Column             |            Type             | Collation | Nullable |                       Default
--------------------------------+-----------------------------+-----------+----------+-----------------------------------------------------
- person_id                     | bigint                      |           | not null |
- observation_concept_id        | integer                     |           | not null |
- observation_date              | date                        |           |          |
- observation_datetime          | timestamp without time zone |           | not null |
- observation_type_concept_id   | integer                     |           | not null |
- value_as_number               | numeric                     |           |          |
- value_as_string               | character varying(60)       |           |          |
- value_as_concept_id           | integer                     |           |          |
- qualifier_concept_id          | integer                     |           |          |
- unit_concept_id               | integer                     |           |          |
- provider_id                   | bigint                      |           |          |
- visit_occurrence_id           | bigint                      |           |          |
- visit_detail_id               | bigint                      |           |          |
- observation_source_value      | character varying(50)       |           |          |
- observation_source_concept_id | integer                     |           | not null |
- unit_source_value             | character varying(50)       |           |          |
- qualifier_source_value        | character varying(50)       |           |          |
- observation_event_id          | bigint                      |           |          |
- obs_event_field_concept_id    | integer                     |           | not null |
- value_as_datetime             | timestamp without time zone |           |          |
- observation_id                | bigint                      |           | not null | nextval('observation_observation_id_seq'::regclass)
-         */
+                + "(1" //synthetic value
+                + ",1" //synthetic value
+                + ",4152194" // systolic blood pressure (SNOMED-CT)
+                + ",'2019-04-01 10:32:38.918051-04'"
+                + ",44819029 " // Observable Entity (concept_id from concept_class table)
+                + ",'4/1/2019'"
+                + "," + value //get value from FHIR resource
+                + ",'" + value + "'" //get value from FHIR resource
+                + ",3016833" // Chart section Set
+                + ",4152194)"; // systolic blood pressure (SNOMED-CT)
 
         try {
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        /*
+                                                                        Table "public.observation"
+                    Column             |            Type             | Collation | Nullable |                       Default
+        -------------------------------+-----------------------------+-----------+----------+-----------------------------------------------------
+         person_id                     | bigint                      |           | not null |
+         observation_concept_id        | integer                     |           | not null |
+         observation_date              | date                        |           |          |
+         observation_datetime          | timestamp without time zone |           | not null |
+         observation_type_concept_id   | integer                     |           | not null |
+         value_as_number               | numeric                     |           |          |
+         value_as_string               | character varying(60)       |           |          |
+         value_as_concept_id           | integer                     |           |          |
+         qualifier_concept_id          | integer                     |           |          |
+         unit_concept_id               | integer                     |           |          |
+         provider_id                   | bigint                      |           |          |
+         visit_occurrence_id           | bigint                      |           |          |
+         visit_detail_id               | bigint                      |           |          |
+         observation_source_value      | character varying(50)       |           |          |
+         observation_source_concept_id | integer                     |           | not null |
+         unit_source_value             | character varying(50)       |           |          |
+         qualifier_source_value        | character varying(50)       |           |          |
+         observation_event_id          | bigint                      |           |          |
+         obs_event_field_concept_id    | integer                     |           | not null |
+         value_as_datetime             | timestamp without time zone |           |          |
+         observation_id                | bigint                      |           | not null | nextval('observation_observation_id_seq'::regclass)
+         */
     }
 }
