@@ -1,27 +1,42 @@
+import input.HL7Input;
+import encoder.HL7Encoder;
+import query.Q1;
+import output.ScreenOutput;
+
 public class Launcher {
     public static void main(String[]  args) {
-        // add HL7 producer p1
-//        HL7Producer p1 = new HL7Producer();
-//        p1.start();
+        /* INPUTS */
 
-        // add FHIR producer p2
+        // OBXSegmentInput p1 = new OBXSegmentInput("HL7");
+        // * Construct an input message representing vital signs using HAPI
 
-        // add Semantic Encoder producer/consumer
-//        SemanticEncoder semanticEncoder = new SemanticEncoder();
-//        semanticEncoder.addHL7Consumer();
+        // I couldn't get the OBX Segment input to work, so I'm using a simpler HL7 message
+        // copied off of the HL7toRDF repo's README page. It works, but I would like to come
+        // back to the OBX Segment input and get it working.
 
-        // add CEP consumer c1
+        // Add HL7 producer p1
+        HL7Input p1 = new HL7Input("HL7");
 
-        // add OMOP consumer c2
+        // Add FHIR producer p2
+        // * Use the HAPITester class in the examples package to download FHIR
+        // messages from the test server and post them to the message queue.
 
-        // send HL7 message from p1
-        // pull message to semantic encoder
-        // convert message from HL7 to RDF
-        // pull CEP message to c1
-        // pull message to c2
+        /* ENCODERS */
+        // Add HL7 encoder
+        HL7Encoder e1 = new HL7Encoder("HL7","EXCHANGE");
 
-        HAPITester tst = new HAPITester();
-        tst.GetVitalSigns();
+        /* QUERY ENGINE */
+        // * Add Jena query engine
+        Q1 q1 = new Q1("EXCHANGE","SCREEN");
 
+        /* OUTPUTS */
+        // * Add screen consumer
+        ScreenOutput screenOutput = new ScreenOutput("SCREEN");
+
+        // * Add CEP consumer
+        // * Add OMOP consumer
+
+        // Start sending messages after the pipeline is set up
+        p1.start();
     }
 }

@@ -1,3 +1,5 @@
+package examples;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.Include;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -28,7 +30,7 @@ public class HAPITester {
          UNKNOWN  (8551);
 
         GenderConcept(int i) { }
-    };
+    }
 
     private int RaceConceptSourceId = 44819109;
     private enum RaceConcept {
@@ -41,7 +43,7 @@ public class HAPITester {
         NOT_STATED(4190758);
 
         RaceConcept(int i) { }
-    };
+    }
 
     private int EthnicityConceptSourceId = 44819134;
     private enum EthnicityConcept {
@@ -49,7 +51,7 @@ public class HAPITester {
         HISPANIC_OR_LATINO(38003563);
 
         EthnicityConcept(int i) { }
-    };
+    }
 
     public HAPITester() {
         try {
@@ -77,9 +79,9 @@ public class HAPITester {
 
         // Build list of different types of resources involved in vital signs,
         // before inserting them into database in reverse order of dependencies
-        List<Patient> patients = new ArrayList<Patient>();
-        List<Encounter> encounters = new ArrayList<Encounter>();
-        List<Observation> observations = new ArrayList<Observation>();
+        List<Patient> patients = new ArrayList<>();
+        List<Encounter> encounters = new ArrayList<>();
+        List<Observation> observations = new ArrayList<>();
 
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
             Resource resource = entry.getResource();
@@ -92,7 +94,6 @@ public class HAPITester {
                     continue;
                 case "Observation":
                     observations.add((Observation) resource);
-                    continue;
             }
         }
 
@@ -129,7 +130,7 @@ public class HAPITester {
 
         try {
             stmt.executeUpdate(sql);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.uky</groupId>
-    <artifactId>SemanticEncoder</artifactId>
+    <artifactId>encoder.Encoder</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -113,6 +113,12 @@
             <artifactId>esper</artifactId>
             <version>7.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>17.0.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -137,7 +143,7 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <artifactId>SemanticEncoder</artifactId>
+                            <artifactId>encoder.Encoder</artifactId>
                             <Implementation-Version>${project.version}.${maven.build.timestamp}</Implementation-Version>
                         </manifestEntries>
                     </archive>
