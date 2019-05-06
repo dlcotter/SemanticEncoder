@@ -44,8 +44,8 @@ import java.io.IOException;
  * @author <a href="mailto:jamesagnew@sourceforge.net">James Agnew</a>
  * @version $Revision: 1.1 $ updated on $Date: 2009-03-19 13:09:26 $ by $Author: jamesagnew $
  */
-public class OBXSegmentInput extends Input {
-    public OBXSegmentInput(String outputTopicName) {
+public class HL7_ORU_R01_Input extends Input {
+    public HL7_ORU_R01_Input(String outputTopicName) {
         super(outputTopicName);
     }
 
@@ -118,14 +118,10 @@ public class OBXSegmentInput extends Input {
      *             If any processing problem occurs
      */
     private String generateMessage() throws HL7Exception, IOException {
-        // First, a message object is constructed
+        // First, a message object is constructed. The initQuickstart method
+        // populates all of the mandatory fields in the MSH segment of the
+        // message, including the message type, the timestamp, and the control ID.
         ORU_R01 message = new ORU_R01();
-
-        /*
-         * The initQuickstart method populates all of the mandatory fields in the
-         * MSH segment of the message, including the message type, the timestamp,
-         * and the control ID.
-         */
         message.initQuickstart("ORU", "R01", "T");
 
         ORU_R01_PATIENT patient = message.getPATIENT_RESULT().getPATIENT();
@@ -196,7 +192,8 @@ public class OBXSegmentInput extends Input {
         value.setData(tx);
 
         // Print the message (remember, the MSH segment was not fully or correctly populated)
-        return message.encode();
+        String messageText = message.encode();
+        return messageText;
 
         /*
          * MSH|^~\&|||||20111102082111.435-0500||ORU^R01^ORU_R01|305|T|2.5

@@ -22,7 +22,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HL7Encoder extends Encoder {
+public class HL7EncoderGeneric extends Encoder {
+    // Adapted from code at https://github.com/housseindh/Hl7ToRDF
+
     private static final Escaping HL7_ESCAPING = new DefaultEscaping();
     private static final String HL7_URI = "http://www.HL7.org/segment#";
     private static final Pattern p = Pattern.compile("^(cm_msg|[a-z][a-z][a-z]?)([0-9]+)_(\\w+)$");
@@ -30,7 +32,7 @@ public class HL7Encoder extends Encoder {
     private Model model = ModelFactory.createDefaultModel();
     private Resource resource;
 
-    public HL7Encoder(String inputTopicName, String outputTopicName) {
+    public HL7EncoderGeneric(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
         hapiContext.setValidationContext((ValidationContext) ValidationContextFactory.noValidation());
     }
@@ -118,11 +120,8 @@ public class HL7Encoder extends Encoder {
             Map<String,Type> mapComponents =  createComponents(field);
 
             if (mapComponents.size()== 0){
-                //System.out.println("fieldKey:" + fieldKey + " | field:" + field);
                 segmentResource.addProperty(createProperty(model, HL7_URI + fieldKey), field.toString());
-
-            }else{
-                //System.out.println("fieldKey:" + fieldKey);
+            } else {
                 Resource componentResource = model.createResource();
 
 
@@ -134,18 +133,10 @@ public class HL7Encoder extends Encoder {
 
                     segmentResource.addProperty(createProperty(model, HL7_URI + fieldKey), componentResource
                             .addProperty(createProperty(model, HL7_URI + componentKey), componentValue));
-
-                    //System.out.println("componentKey:" + componentKey + " | component:" + componentValue);
-
-
                 }
             }
 
         }
-
-
-        //model.write(System.out, "N-TRIPLES");
-
     }
 
     private Map<String, Type> createFields(final Segment segment) throws HL7Exception {

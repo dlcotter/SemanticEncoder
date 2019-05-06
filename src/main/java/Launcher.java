@@ -1,13 +1,13 @@
-import input.HL7Input;
-import encoder.HL7Encoder;
-import query.Q1;
+import encoder.HL7_ORU_R01_Encoder;
+import input.HL7_ORU_R01_Input;
 import output.ScreenOutput;
+import query.Q1;
 
 public class Launcher {
     public static void main(String[]  args) {
         /* INPUTS */
 
-        // OBXSegmentInput p1 = new OBXSegmentInput("HL7");
+        HL7_ORU_R01_Input p1 = new HL7_ORU_R01_Input("HL7");
         // * Construct an input message representing vital signs using HAPI
 
         // I couldn't get the OBX Segment input to work, so I'm using a simpler HL7 message
@@ -15,7 +15,7 @@ public class Launcher {
         // back to the OBX Segment input and get it working.
 
         // Add HL7 producer p1
-        HL7Input p1 = new HL7Input("HL7");
+//        HL7Input p1 = new HL7Input("HL7");
 
         // Add FHIR producer p2
         // * Use the HAPITester class in the examples package to download FHIR
@@ -23,7 +23,8 @@ public class Launcher {
 
         /* ENCODERS */
         // Add HL7 encoder
-        HL7Encoder e1 = new HL7Encoder("HL7","EXCHANGE");
+//        HL7EncoderGeneric e1 = new HL7EncoderGeneric("HL7","EXCHANGE");
+        HL7_ORU_R01_Encoder e1 = new HL7_ORU_R01_Encoder("HL7","EXCHANGE");
 
         /* QUERY ENGINE */
         // * Add Jena query engine

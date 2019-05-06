@@ -1,5 +1,6 @@
 package encoder;
 
+import ca.uhn.hl7v2.HL7Exception;
 import comm.ActiveMQBidirectional;
 import org.apache.jena.rdf.model.Model;
 
@@ -7,8 +8,6 @@ import javax.jms.*;
 import java.io.ByteArrayOutputStream;
 
 abstract class Encoder extends ActiveMQBidirectional {
-    private Model model;
-
     Encoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
 
@@ -18,6 +17,8 @@ abstract class Encoder extends ActiveMQBidirectional {
             e.printStackTrace();
         }
     }
+
+    abstract Model buildModel(String message) throws HL7Exception;
 
     private void setMessageListener() throws JMSException {
         consumer.setMessageListener((inMessage) -> {
@@ -34,10 +35,16 @@ abstract class Encoder extends ActiveMQBidirectional {
             if (inMessageText.isEmpty())
                 return;
 
-            this.model = this.buildModel(inMessageText);
+            Model model;
+            try {
+                model = this.buildModel(inMessageText);
+            } catch (HL7Exception e) {
+                e.printStackTrace();
+                return;
+            }
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            this.model.write(byteArrayOutputStream);
+            model.write(byteArrayOutputStream, "TTL");
             String outMessageText = new String(byteArrayOutputStream.toByteArray());
             if (outMessageText.isEmpty())
                 return;
@@ -51,6 +58,19 @@ abstract class Encoder extends ActiveMQBidirectional {
             }
         });
     }
-
-    abstract Model buildModel(String message);
 }
+
+/*
+Jena writer name 	RIOT RDFFormat
+"TURTLE" 	        TURTLE
+"TTL" 	            TURTLE
+"Turtle" 	        TURTLE
+"N-TRIPLES"         NTRIPLES
+"N-TRIPLE" 	        NTRIPLES
+"NT" 	            NTRIPLES
+"JSON-LD" 	        JSONLD
+"RDF/XML-ABBREV" 	RDFXML
+"RDF/XML" 	        RDFXML_PLAIN
+"N3" 	            N3
+"RDF/JSON" 	        RDFJSON
+ */
