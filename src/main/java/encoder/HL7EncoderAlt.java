@@ -14,8 +14,11 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // Refactored from code at https://github.com/housseindh/Hl7ToRDF
-public class HL7EncoderAlt extends Encoder {
+public class HL7EncoderAlt extends Encoder implements IEncoder {
     private static String HL7_URI = "http://www.HL7.org/segment#";
 
     public HL7EncoderAlt(String inputTopicName, String outputTopicName) {
@@ -23,7 +26,7 @@ public class HL7EncoderAlt extends Encoder {
     }
 
     @Override
-    Model buildModel(String messageText) throws HL7Exception {
+    public List<Model> buildModel(String messageText) throws HL7Exception {
         // HL7 message structure:
         // Message -> Segment -> Field -> Component -> Subcomponent
 
@@ -43,14 +46,17 @@ public class HL7EncoderAlt extends Encoder {
         Parser parser = hapiContext.getGenericParser();
         Message message = parser.parse(messageText);
         Model model = ModelFactory.createDefaultModel();
+        ArrayList<Model> models = new ArrayList<>();
         Resource resource = model.createResource();
 
         if (message == null || message.isEmpty())
-            return model;
+            return models;
 
         getStructures(message);
 
-        return model;
+        models.add(model);
+
+        return models;
     }
 
     private void getStructures(Group group) throws HL7Exception {

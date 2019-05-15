@@ -2,13 +2,16 @@ package encoder;
 
 import org.apache.jena.rdf.model.Model;
 
-public class CSVEncoder extends Encoder {
+import java.util.ArrayList;
+import java.util.List;
+
+public class CSVEncoder extends Encoder implements IEncoder {
     public CSVEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }
 
     @Override
-    Model buildModel(String message) {
-        return null;
+    public List<Model> buildModel(String message) {
+        return new ArrayList<>();
     }
 }

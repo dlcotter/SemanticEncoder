@@ -17,12 +17,14 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HL7EncoderGeneric extends Encoder {
+public class HL7EncoderGeneric extends Encoder implements IEncoder {
     // Adapted from code at https://github.com/housseindh/Hl7ToRDF
 
     private static final Escaping HL7_ESCAPING = new DefaultEscaping();
@@ -38,7 +40,7 @@ public class HL7EncoderGeneric extends Encoder {
     }
 
     @Override
-    Model buildModel(String message) {
+    public List<Model> buildModel(String message) {
         PipeParser parser = hapiContext.getPipeParser();
 
         try {
@@ -50,7 +52,10 @@ public class HL7EncoderGeneric extends Encoder {
             e.printStackTrace();
         }
 
-        return model;
+        List<Model> models = new ArrayList<>();
+        models.add(model);
+
+        return models;
     }
 
     private String findPID(final Group group) throws HL7Exception {

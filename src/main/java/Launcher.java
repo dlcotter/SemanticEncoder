@@ -1,18 +1,13 @@
-import encoder.HL7_ORU_R01_Encoder;
-import input.HL7_ORU_R01_Input;
+import encoder.HL7VitalSignsEncoder;
+import encoder.IEncoder;
+import input.HL7VitalSignsInput;
 import output.ScreenOutput;
 import query.Q1;
 
 public class Launcher {
     public static void main(String[]  args) {
         /* INPUTS */
-
-        HL7_ORU_R01_Input p1 = new HL7_ORU_R01_Input("HL7");
-        // * Construct an input message representing vital signs using HAPI
-
-        // I couldn't get the OBX Segment input to work, so I'm using a simpler HL7 message
-        // copied off of the HL7toRDF repo's README page. It works, but I would like to come
-        // back to the OBX Segment input and get it working.
+        HL7VitalSignsInput p1 = new HL7VitalSignsInput("HL7");
 
         // Add HL7 producer p1
 //        HL7Input p1 = new HL7Input("HL7");
@@ -24,7 +19,7 @@ public class Launcher {
         /* ENCODERS */
         // Add HL7 encoder
 //        HL7EncoderGeneric e1 = new HL7EncoderGeneric("HL7","EXCHANGE");
-        HL7_ORU_R01_Encoder e1 = new HL7_ORU_R01_Encoder("HL7","EXCHANGE");
+        IEncoder e1 = new HL7VitalSignsEncoder("HL7","EXCHANGE");
 
         /* QUERY ENGINE */
         // * Add Jena query engine

@@ -1,19 +1,20 @@
 package input;
 
 import ca.uhn.hl7v2.HL7Exception;
-import ca.uhn.hl7v2.model.Varies;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
-import ca.uhn.hl7v2.model.v25.datatype.ST;
-import ca.uhn.hl7v2.model.v25.datatype.TX;
-import ca.uhn.hl7v2.model.v25.group.ORU_R01_OBSERVATION;
 import ca.uhn.hl7v2.model.v25.group.ORU_R01_ORDER_OBSERVATION;
 import ca.uhn.hl7v2.model.v25.group.ORU_R01_PATIENT;
+import ca.uhn.hl7v2.model.v25.group.ORU_R01_PATIENT_RESULT;
+import ca.uhn.hl7v2.model.v25.group.ORU_R01_VISIT;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
 import ca.uhn.hl7v2.model.v25.segment.PID;
+import ca.uhn.hl7v2.model.v25.segment.PV1;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+
 /**
  * The contents of this file are subject to the Mozilla Public License Version 1.1
  * (the "License"); you may not use this file except in compliance with the License.
@@ -44,8 +45,8 @@ import java.io.IOException;
  * @author <a href="mailto:jamesagnew@sourceforge.net">James Agnew</a>
  * @version $Revision: 1.1 $ updated on $Date: 2009-03-19 13:09:26 $ by $Author: jamesagnew $
  */
-public class HL7_ORU_R01_Input extends Input {
-    public HL7_ORU_R01_Input(String outputTopicName) {
+public class HL7VitalSignsInput extends Input {
+    public HL7VitalSignsInput(String outputTopicName) {
         super(outputTopicName);
     }
 
@@ -124,23 +125,37 @@ public class HL7_ORU_R01_Input extends Input {
         ORU_R01 message = new ORU_R01();
         message.initQuickstart("ORU", "R01", "T");
 
-        ORU_R01_PATIENT patient = message.getPATIENT_RESULT().getPATIENT();
-        PID pid = patient.getPID();
-        pid.getPid1_SetIDPID().setValue("87345125");
+        ORU_R01_PATIENT_RESULT patientResultGroup = message.getPATIENT_RESULT();
+        ORU_R01_PATIENT patientGroup = patientResultGroup.getPATIENT();
+
+        PID pidSegment = patientGroup.getPID();
+        pidSegment.getPid1_SetIDPID().setValue("123456789");
+        pidSegment.getPid3_PatientIdentifierList(0).getCx1_IDNumber().setValue("123456789");
+        pidSegment.getPid5_PatientName(0).getXpn1_FamilyName().getFn1_Surname().setValue("Candy");
+        pidSegment.getPid5_PatientName(0).getXpn2_GivenName().setValue("John");
+        pidSegment.getPid7_DateTimeOfBirth().getTs1_Time().setValue("19501031");
+        pidSegment.getPid8_AdministrativeSex().setValue("male");
+
+        ORU_R01_VISIT visitGroup = patientGroup.getVISIT();
+        PV1 pv1Segment = visitGroup.getPV1();
+        pv1Segment.getPv13_AssignedPatientLocation().getPl3_Bed().setValue("121A");
+        pv1Segment.getPv13_AssignedPatientLocation().getPl7_Building().setValue("A. B. Chandler");
+        pv1Segment.getPv13_AssignedPatientLocation().getPl8_Floor().setValue("8");
 
         /*
          * The OBR segment is contained within a group called ORDER_OBSERVATION,
          * which is itself in a group called PATIENT_RESULT. These groups are
          * reached using named accessors.
          */
-        ORU_R01_ORDER_OBSERVATION orderObservation = message.getPATIENT_RESULT().getORDER_OBSERVATION();
+        ORU_R01_ORDER_OBSERVATION orderObservationGroup = patientResultGroup.getORDER_OBSERVATION();
 
         // Populate the OBR
-        OBR obr = orderObservation.getOBR();
-        obr.getSetIDOBR().setValue("1");
-        obr.getFillerOrderNumber().getEntityIdentifier().setValue("1234");
-        obr.getFillerOrderNumber().getNamespaceID().setValue("LAB");
-        obr.getUniversalServiceIdentifier().getIdentifier().setValue("88304");
+        OBR obrSegment = orderObservationGroup.getOBR();
+        obrSegment.getObr1_SetIDOBR().setValue("1376793");
+        obrSegment.getObr4_UniversalServiceIdentifier().getCe1_Identifier().setValue("85354-9");
+        obrSegment.getObr4_UniversalServiceIdentifier().getCe2_Text().setValue("Blood pressure panel with all children optional");
+        obrSegment.getObr4_UniversalServiceIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
+        obrSegment.getObr7_ObservationDateTime().getTs1_Time().setValue(LocalDateTime.now().toString()); // .format(DateTimeFormatter.ofPattern("YYYYMMDDHHMM") wasn't working
 
         /*
          * The OBX segment is in a repeating group called OBSERVATION. You can
@@ -148,58 +163,34 @@ public class HL7_ORU_R01_Input extends Input {
          * repetition. You can ask for an index which is equal to the
          * current number of repetitions,and a new repetition will be created.
          */
-        ORU_R01_OBSERVATION observation = orderObservation.getOBSERVATION(0);
 
-        // Populate the first OBX
-        OBX obx = observation.getOBX();
-        obx.getSetIDOBX().setValue("1");
-        obx.getObservationIdentifier().getIdentifier().setValue("88304");
-        obx.getObservationSubID().setValue("1");
+        OBX obxSegment1 = orderObservationGroup.getOBSERVATION(0).getOBX();
+        obxSegment1.getObx1_SetIDOBX().setValue("1");
+        obxSegment1.getObx2_ValueType().setValue("CE"); // Coded Element
+        obxSegment1.getObx3_ObservationIdentifier().getCe1_Identifier().setValue("8480-6");
+        obxSegment1.getObx3_ObservationIdentifier().getCe2_Text().setValue("Systolic blood pressure");
+        obxSegment1.getObx3_ObservationIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
 
-        // The first OBX has a value type of CE. So first, we populate OBX-2 with "CE"...
-        obx.getValueType().setValue("CE");
+        CE codedElement1 = new CE(message);
+        codedElement1.getCe1_Identifier().setValue("107");
+        codedElement1.getCe2_Text().setValue("mm[Hg]");
+        codedElement1.getCe3_NameOfCodingSystem().setValue("UOM"); // http://unitsofmeasure.org
+        obxSegment1.getObx5_ObservationValue(0).setData(codedElement1);
 
-        // ... then we create a CE instance to put in OBX-5.
-        CE ce = new CE(message);
-        ce.getIdentifier().setValue("T57000");
-        ce.getText().setValue("GALLBLADDER");
-        ce.getNameOfCodingSystem().setValue("SNM");
-        Varies value = obx.getObservationValue(0);
-        value.setData(ce);
+        OBX obxSegment2 = orderObservationGroup.getOBSERVATION(1).getOBX();
+        obxSegment2.getObx1_SetIDOBX().setValue("2");
+        obxSegment2.getObx2_ValueType().setValue("CE"); // Coded Element
+        obxSegment2.getObx3_ObservationIdentifier().getCe1_Identifier().setValue("8462-4");
+        obxSegment2.getObx3_ObservationIdentifier().getCe2_Text().setValue("Diastolic blood pressure");
+        obxSegment2.getObx3_ObservationIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
 
-        // Now we populate the second OBX
-        obx = orderObservation.getOBSERVATION(1).getOBX();
-        obx.getSetIDOBX().setValue("2");
-        obx.getObservationSubID().setValue("1");
-
-        // The second OBX in the sample message has an extra subcomponent at
-        // OBX-3-1. This component is actually an ST, but the HL7 specification allows
-        // extra subcomponents to be tacked on to the end of a component. This is
-        // uncommon, but HAPI nonetheless allows it.
-        ST observationIdentifier = obx.getObservationIdentifier().getIdentifier();
-        observationIdentifier.setValue("88304");
-        ST extraSubcomponent = new ST(message);
-        extraSubcomponent.setValue("MDT");
-        observationIdentifier.getExtraComponents().getComponent(0).setData(extraSubcomponent );
-
-        // The first OBX has a value type of TX. So first, we populate OBX-2 with "TX"...
-        obx.getValueType().setValue("TX");
-
-        // ... then we create a CE instance to put in OBX-5.
-        TX tx = new TX(message);
-        tx.setValue("MICROSCOPIC EXAM SHOWS HISTOLOGICALLY NORMAL GALLBLADDER TISSUE");
-        value = obx.getObservationValue(0);
-        value.setData(tx);
+        CE codedElement2 = new CE(message);
+        codedElement2.getIdentifier().setValue("60");
+        codedElement2.getText().setValue("mm[Hg]");
+        codedElement2.getNameOfCodingSystem().setValue("UOM"); // http://unitsofmeasure.org
+        obxSegment2.getObx5_ObservationValue(0).setData(codedElement2);
 
         // Print the message (remember, the MSH segment was not fully or correctly populated)
-        String messageText = message.encode();
-        return messageText;
-
-        /*
-         * MSH|^~\&|||||20111102082111.435-0500||ORU^R01^ORU_R01|305|T|2.5
-         * OBR|1||1234^LAB|88304
-         * OBX|1|CE|88304|1|T57000^GALLBLADDER^SNM
-         * OBX|2|TX|88304&MDT|1|MICROSCOPIC EXAM SHOWS HISTOLOGICALLY NORMAL GALLBLADDER TISSUE
-         */
+        return message.encode();
     }
 }
