@@ -2,8 +2,8 @@ package query;
 
 import comm.ActiveMQBidirectional;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
 
 import javax.jms.JMSException;
@@ -28,8 +28,6 @@ abstract class Query extends ActiveMQBidirectional {
 
     private void setMessageListener() throws JMSException {
         consumer.setMessageListener((inMessage) -> {
-//            dataset.begin(ReadWrite.WRITE);
-
             System.out.println(this.getClass() + " caught one.");
             if (!(inMessage instanceof TextMessage))
                 return;
@@ -43,9 +41,41 @@ abstract class Query extends ActiveMQBidirectional {
             if (inMessageText.isEmpty())
                 return;
 
-            Model model = ModelFactory.createDefaultModel();
+            Model model = null;
+//            Model model = ModelFactory.createDefaultModel();
+            model = dataset.getNamedModel( "m" );
+
             Reader reader = new StringReader(inMessageText);
-            model.read(reader, "TTL");
+            try {
+                model.read(reader, "TTL");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // TDB transaction
+            dataset.begin( ReadWrite.WRITE );
+            try
+            {
+//                model = dataset.getNamedModel( "m" );
+//
+//                Statement stmt = model.createStatement
+//                        (
+//                                model.createResource( "s" ),
+//                                model.createProperty( "p" ),
+//                                model.createResource( "o" )
+//                        );
+
+//                model.add( stmt );
+                dataset.commit();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+            finally
+            {
+                dataset.end();
+//                if( model != null ) model.close();
+
+            }
 
             /* Replace with message handler to be set by child classes */
             String outMessageText = inMessageText;
@@ -57,9 +87,6 @@ abstract class Query extends ActiveMQBidirectional {
             } catch (JMSException e) {
                 e.printStackTrace();
             }
-
-//            dataset.commit();
-//            dataset.end();
         });
     }
 
