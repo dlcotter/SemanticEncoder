@@ -24,7 +24,7 @@ public class HL7VitalSignsEncoder extends Encoder implements IEncoder {
     public HL7VitalSignsEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }
-// May need to change the return type to Model[] for those HL7 messages that contain patient/visit/observation(s)
+
     @Override
     public List<Model> buildModel(String messageText) throws HL7Exception {
         // HL7 message structure:

@@ -1,41 +1,17 @@
 package output;
 
-import comm.ActiveMQConsumer;
+import comm.ActiveMQEnabled;
 
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import java.util.ArrayList;
+import java.util.List;
 
-abstract class Output extends ActiveMQConsumer {
+abstract class Output extends ActiveMQEnabled implements IOutput {
     Output(String inputTopicName) {
-        super(inputTopicName);
-
-        try {
-            setMessageListener();
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        super(inputTopicName, null);
     }
 
-    private void setMessageListener() throws JMSException {
-        consumer.setMessageListener((inMessage) -> {
-            System.out.println(this.getClass() + " caught one.");
-            if (!(inMessage instanceof TextMessage))
-                return;
-
-            String inMessageText = "";
-            try {
-                inMessageText = ((TextMessage) inMessage).getText();
-            } catch(JMSException e) {
-                e.printStackTrace();
-            }
-            if (inMessageText.isEmpty())
-                return;
-
-            handleMessage(inMessageText);
-        });
-
-
+    @Override
+    protected List<String> processInputText(String inputMessageText) {
+        return new ArrayList<>();
     }
-
-    abstract void handleMessage(String inMessageText);
 }
