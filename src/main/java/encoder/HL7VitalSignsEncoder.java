@@ -134,37 +134,38 @@ public class HL7VitalSignsEncoder extends Encoder implements IEncoder {
     }
 }
 
-/* The HL7 spec defines the following structure for an ORU^R01 message, represented in HAPI by the segment group:
- * Curly braces - repeated group; straight brackets - optional
- *
- * <code>
- *                     ORDER_OBSERVATION start
- *       {
- *       [ ORC ]
- *       OBR
- *       [ { NTE } ]
- *                     TIMING_QTY start
- *          [{
- *          TQ1
- *          [ { TQ2 } ]
- *          }]
- *                     TIMING_QTY end
- *       [ CTD ]
- *                     OBSERVATION start
- *          [{
- *          OBX
- *          [ { NTE } ]
- *          }]
- *                     OBSERVATION end
- *       [ { FT1 } ]
- *       [ { CTI } ]
- *                     SPECIMEN start
- *          [{
- *          SPM
- *          [ { OBX } ]
- *          }]
- *                     SPECIMEN end
- *       }
- *                     ORDER_OBSERVATION end
- * </code>
- */
+/*
+ The HL7 spec defines the following structure for an ORU^R01 message, represented in HAPI by the segment group:
+ Curly braces - repeated group; straight brackets - optional
+
+ <code>
+                     ORDER_OBSERVATION start
+       {
+       [ ORC ]
+       OBR
+       [ { NTE } ]
+                     TIMING_QTY start
+          [{
+          TQ1
+          [ { TQ2 } ]
+          }]
+                     TIMING_QTY end
+       [ CTD ]
+                     OBSERVATION start
+          [{
+          OBX
+          [ { NTE } ]
+          }]
+                     OBSERVATION end
+       [ { FT1 } ]
+       [ { CTI } ]
+                     SPECIMEN start
+          [{
+          SPM
+          [ { OBX } ]
+          }]
+                     SPECIMEN end
+       }
+                     ORDER_OBSERVATION end
+ </code>
+*/

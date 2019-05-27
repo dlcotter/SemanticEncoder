@@ -45,16 +45,17 @@ public abstract class ActiveMQEnabled {
         }
     }
 
-    protected void printMessageDebugInfo(TextMessage textMessage) {
-        if (debug) {
-            System.out.println("Time: " + new Date());
-            System.out.println("Input topic: " + inputTopicName);
-            System.out.println("Output topic: " + outputTopicName);
-            System.out.println("Class: " + this.getClass());
-            System.out.println("Message hash: " + textMessage.hashCode());
-            System.out.println("Current thread: " + Thread.currentThread().getName());
-            System.out.println();
-        }
+    protected void printMessageDebugInfo(TextMessage textMessage, String receiptMode) {
+        if (!debug)
+            return;
+
+        System.out.println();
+        System.out.println(getClass() + " " + receiptMode + " message.");
+        System.out.println("Time: " + new Date());
+        System.out.println("Input topic: " + inputTopicName);
+        System.out.println("Output topic: " + outputTopicName);
+        System.out.println("Message hash: " + textMessage.hashCode());
+        System.out.println("Current thread: " + Thread.currentThread().getName());
     }
 
     // To be implemented by child classes for use in incomingMessageHandler (below)
@@ -63,13 +64,14 @@ public abstract class ActiveMQEnabled {
     private MessageListener incomingMessageHandler = new MessageListener() {
         @Override
         public void onMessage(Message inputMessage) {
-            if (inputMessage == null || !(inputMessage instanceof TextMessage))
+            if (!(inputMessage instanceof TextMessage))
                 return;
 
             // Process incoming message
             String inputMessageText = "";
             try {
                 inputMessageText = ((TextMessage) inputMessage).getText();
+                printMessageDebugInfo((TextMessage)inputMessage, "caught");
             } catch(JMSException e) {
                 e.printStackTrace();
             }
@@ -85,10 +87,12 @@ public abstract class ActiveMQEnabled {
                 if (outputMessageText.isEmpty())
                     continue;
 
-                TextMessage outMessage;
+                // Build message
+                TextMessage outputMessage;
                 try {
-                    outMessage = session.createTextMessage(outputMessageText);
-                    producer.send(outMessage);
+                    outputMessage = session.createTextMessage(outputMessageText);
+                    producer.send(outputMessage);
+                    printMessageDebugInfo(outputMessage, "sent");
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }

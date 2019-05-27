@@ -2,28 +2,48 @@ package store;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.tdb.TDBFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TDBStore extends Store {
-    Dataset dataset;
+    private Dataset dataset = TDBFactory.createDataset("./tdb/" + outputTopicName);
 
     public TDBStore(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
-
-        dataset = TDBFactory.createDataset("./tdb/" + outputTopicName);
     }
 
-    void write() {
+    @Override
+    protected List<String> processInputText(String inputMessageText) {
         dataset.begin(ReadWrite.WRITE);
         try {
+            Model model = dataset.getDefaultModel();
+
+            Resource s = model.createResource("s");
+            Property p = model.createProperty("p");
+            Resource o = model.createResource("o");
+
+            Statement stmt = model.createStatement(s,p,o);
+            model.add(stmt);
+
             dataset.commit();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             dataset.end();
         }
+
+        List<String> outputMessageTexts = new ArrayList<>();
+        outputMessageTexts.add(inputMessageText);
+
+        return outputMessageTexts;
     }
-//          Set up the model
+//          1. Set up the model
 //            Model model = null;
 
 //          a) From a factory method - working
@@ -32,9 +52,7 @@ public class TDBStore extends Store {
 //          b) From the dataset - working
 //          model = dataset.getNamedModel("m");
 
-
-
-//          1. Set up the reader
+//          2. Set up the reader
 //              a) From a file - working
 //            Reader fileReader = null;
 //            try {
@@ -51,9 +69,7 @@ public class TDBStore extends Store {
 //                e.printStackTrace();
 //            }
 
-
-
-//          2. Populate the model
+//          3. Populate the model
 //              a) By direct construction - working
 //            Statement stmt = model.createStatement
 //                    (

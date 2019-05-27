@@ -6,7 +6,6 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.tdb.TDBFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -24,8 +23,6 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
 
     Encoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
-
-        dataset = TDBFactory.createDataset("./tdb");
     }
 
     class Patient {
@@ -137,6 +134,7 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
 
     @Override
     protected List<String> processInputText(String inputMessageText) {
+        // Build the Jena RDF models based on the incoming message
         List<Model> models = new ArrayList<>();
         try {
             models = this.buildModel(inputMessageText);
@@ -164,8 +162,10 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
                  */
             String outputMessageText = new String(byteArrayOutputStream.toByteArray());
 
-            if (!outputMessageText.isEmpty())
-                outputMessageTexts.add(outputMessageText);
+            if (outputMessageText.isEmpty())
+                continue;
+
+            outputMessageTexts.add(outputMessageText);
         }
 
         return outputMessageTexts;

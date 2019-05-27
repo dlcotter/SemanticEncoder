@@ -5,7 +5,7 @@ import input.IInput;
 import output.IOutput;
 import output.ScreenOutput;
 import query.IQuery;
-import query.PassthroughQuery;
+import query.PassThroughQuery;
 import store.IStore;
 import store.TDBStore;
 
@@ -31,7 +31,7 @@ public class Launcher {
 
         /* QUERY ENGINE */
         // * Add Jena query engine
-        IQuery q1 = new PassthroughQuery("PASSTHROUGH","SCREEN");
+        IQuery q1 = new PassThroughQuery("PASSTHROUGH","SCREEN");
 
         /* OUTPUTS */
         // * Add screen consumer

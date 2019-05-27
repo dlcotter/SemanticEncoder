@@ -14,8 +14,6 @@ abstract class Input extends ActiveMQEnabled implements IInput {
         super(null, outputTopicName);
     }
 
-    abstract String getNextMessage();
-
     public void start() {
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
@@ -29,7 +27,8 @@ abstract class Input extends ActiveMQEnabled implements IInput {
                     // Tell the producer to send the message
                     producer.send(textMessage);
 
-                    Input.super.printMessageDebugInfo(textMessage);
+                    // Print debug info
+                    printMessageDebugInfo(textMessage, "sent");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -43,6 +42,14 @@ abstract class Input extends ActiveMQEnabled implements IInput {
         timer.scheduleAtFixedRate(repeatedTask, delay, period);
     }
 
+    abstract String getNextMessage();
+
+    @Override
+    protected List<String> processInputText(String inputMessageText) {
+        // Inputs never catch incoming messages, so they can just return an empty list
+        return new ArrayList<>();
+    }
+
     private String getMD5Checksum(String checkString) {
         byte[] b = checkString.getBytes(Charset.forName("UTF-8"));
         StringBuilder result = new StringBuilder();
@@ -51,11 +58,5 @@ abstract class Input extends ActiveMQEnabled implements IInput {
             result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
         }
         return result.toString();
-    }
-
-    @Override
-    protected List<String> processInputText(String inputMessageText) {
-        // Inputs never catch incoming messages, so they can just return an empty list
-        return new ArrayList<>();
     }
 }
