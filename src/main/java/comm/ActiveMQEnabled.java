@@ -49,13 +49,25 @@ public abstract class ActiveMQEnabled {
         if (!debug)
             return;
 
-        System.out.println();
-        System.out.println(getClass() + " " + receiptMode + " message.");
-        System.out.println("Time: " + new Date());
-        System.out.println("Input topic: " + inputTopicName);
-        System.out.println("Output topic: " + outputTopicName);
-        System.out.println("Message hash: " + textMessage.hashCode());
-        System.out.println("Current thread: " + Thread.currentThread().getName());
+        // Compose debug message from various pieces of information
+        // Note: Better to compose the string first and then call println() than to call
+        // println() repeatedly, since each call to println() is executed separately and
+        // can wind up interleaved with other threads' printed statements in a jumble.
+        String debugMessage = "\n"
+            + this.getClass() + " " + receiptMode + " message.\n"
+            + "Time: " + new Date() + "\n"
+            + "Input topic: " + inputTopicName + "\n"
+            + "Output topic: " + outputTopicName + "\n"
+            + "Message hash: " + textMessage.hashCode() + "\n"
+            + "Current thread: " + Thread.currentThread().getName() + "\n";
+
+        try {
+            debugMessage += "Message contents: " + textMessage.getText();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(debugMessage);
     }
 
     // To be implemented by child classes for use in incomingMessageHandler (below)

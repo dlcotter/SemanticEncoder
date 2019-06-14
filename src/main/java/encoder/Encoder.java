@@ -2,24 +2,26 @@ package encoder;
 
 import ca.uhn.hl7v2.HL7Exception;
 import comm.ActiveMQEnabled;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 abstract class Encoder extends ActiveMQEnabled implements IEncoder {
-    Dataset dataset;
+    // The child classes of encoder are expected to build the domain objects
+    // patient, encounter, and/or observation, then call encodeXXX and add
+    // the resulting Model object to the list of models returned by buildModel().
+    // The current design, in which the superclass encodes the model to RDF,
+    // abstracts away the encoding from the child classes, so that there is more
+    // separation of concerns and less repetitive code.
 
     private String FHIR  = "http://hl7.org/fhir/";
-//    String LOINC = "http://loinc.org/rdf#";
-//    String OWL   = "http://www.w3.org/2002/07/owl#";
-//    String RDFS  = "http://www.w3.org/2000/01/rdf-schema#";
-//    String SCT   = "http://snomed.info/id/";
-//    String XSD   = "http://www.w3.org/2001/XMLSchema#";
+    String LOINC = "http://loinc.org/rdf#";
+    String OWL   = "http://www.w3.org/2002/07/owl#";
+    String RDFS  = "http://www.w3.org/2000/01/rdf-schema#";
+    String SCT   = "http://snomed.info/id/";
+    String XSD   = "http://www.w3.org/2001/XMLSchema#";
 
     Encoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
@@ -64,6 +66,8 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
     Model encodeEncounter(Encounter encounter) {
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("fhir","http://hl7.org/fhir/");
+        model.createProperty("a","fhir:Encounter");
+        model.createProperty("fhir:nodeRole","fhir:treeRoot");
 
         // Fill in later when there's a need for it
 //        Resource root = model.getResource("Visit");
@@ -80,6 +84,8 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
     Model encodeObservation(Observation observation) {
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("fhir","http://hl7.org/fhir/");
+        model.createProperty("a","fhir:Observation");
+        model.createProperty("fhir:nodeRole","fhir:treeRoot");
 
         Resource root = model.getResource("fhir:Observation");
         root.addProperty(model.createProperty("fhir:Resource.id"), observation.observationID);

@@ -2,7 +2,8 @@ package query;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.tdb.TDBFactory;
 
 import java.util.ArrayList;
@@ -25,13 +26,14 @@ public class PassThroughQuery extends Query {
         try {
             StmtIterator it = model.listStatements();
             while (it.hasNext()) {
-                Statement stmt = it.next();
                 outputMessageTexts.add(inputMessageText);
+
+                // temporary debugging output
+                System.out.println(inputMessageText);
             }
-            dataset.commit();
-        }
-        finally
-        {
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
             dataset.end();
         }
 
