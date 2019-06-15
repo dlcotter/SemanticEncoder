@@ -29,13 +29,13 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
         super(inputTopicName, outputTopicName);
 
         // Initialize prefix hashmap
-        prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
-        prefixes.put("LOINC" ,"http://loinc.org/rdf#)");
-        prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
         prefixes.put("RDF"   ,"http://www.w3.org/1999/02/22-rdf-syntax-ns#");
         prefixes.put("RDFS"  ,"http://www.w3.org/2000/01/rdf-schema#");
-        prefixes.put("SCT"   ,"http://snomed.info/id#");
+        prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
         prefixes.put("XSD"   ,"http://www.w3.org/2001/XMLSchema#");
+        prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
+        prefixes.put("LOINC" ,"http://loinc.org/rdf#)");
+        prefixes.put("SCT"   ,"http://snomed.info/id#");
     }
 
     // This function adds the required namespaces to the Jena model (used in the encodeXXX() functions)
@@ -70,7 +70,7 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
         Resource root = model.getResource("fhir:Observation");
         root.addProperty(model.createProperty("rdf:type"),"fhir:Encounter");
         root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
-        root.addProperty(model.createProperty("fhir:Resource.id"), encounter.identifier);
+//        root.addProperty(model.createProperty("fhir:Resource.id"), encounter.identifier);
 
         // Fill in later when there's a need for it
 //        Resource root = model.getResource("Visit");

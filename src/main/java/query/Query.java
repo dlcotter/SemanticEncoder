@@ -1,6 +1,6 @@
 package query;
 
-import comm.ActiveMQEnabled;
+import common.ActiveMQEnabled;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.tdb.TDBFactory;
 

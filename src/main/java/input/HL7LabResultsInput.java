@@ -15,8 +15,8 @@ import ca.uhn.hl7v2.model.v25.segment.PV1;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-public class HL7VitalSignsInput extends Input {
-    public HL7VitalSignsInput(String outputTopicName) {
+public class HL7LabResultsInput extends Input {
+    public HL7LabResultsInput(String outputTopicName) {
         super(outputTopicName);
     }
 
@@ -34,6 +34,18 @@ public class HL7VitalSignsInput extends Input {
     }
 
     private String generateMessage() throws HL7Exception, IOException {
+        /*
+                String msg2 =
+                  "MSH|^~\\&|ADT1|MCM|LABADT|MCM|198808181126|SECURITY|ADT^A01|MSG00001-|P|2.5.1\r\n"
+                + "EVN|A01|198808181123\r\n"
+                + "PID|||PATID1231^5^M11||JONES^WILLIAM^A^III||19610615|M-||C|1200 N ELM STREET^^GREENSBORO^NC^27401-1020|GL|(91-9)379-1212|(919)271-3434||S||PATID12345001^2^M10|123456789|9-87654^NC\r\n"
+                + "PV1|1|I|2000^2012^01||||004777^LEBAUER^SIDNEY^J.|||SUR||-||ADM|A0-\r\n"
+                + "AL1|||^Cat dander|Respiratory distress\r\n"
+                + "OBX|1|NM|GLU^Glucose Lvl|59|mg/dL|65-99^65^99|L|||F|||20150102000000|\r\n"
+                + "DG1|1||78900^ABDMNAL PAIN UNSPCF SITE^I9CDX|||W\r\n"
+                + "DG1|3||1488000^Postoperative nausea and vomiting^SCT|||W ";
+         */
+
         /**
          * We are going to create an ORU_R01 message, for the purpose of demonstrating the creation and
          * population of an OBX segment.

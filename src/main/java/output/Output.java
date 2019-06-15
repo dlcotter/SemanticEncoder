@@ -1,6 +1,6 @@
 package output;
 
-import comm.ActiveMQEnabled;
+import common.ActiveMQEnabled;
 
 import java.util.ArrayList;
 import java.util.List;

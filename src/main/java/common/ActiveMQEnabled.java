@@ -14,7 +14,7 @@ public abstract class ActiveMQEnabled {
     protected MessageProducer producer;
     protected String inputTopicName, outputTopicName;
     private Destination inputDestination, outputDestination;
-    protected boolean debug = true;
+    private boolean debug = true;
 
     public ActiveMQEnabled(String inputTopicName, String outputTopicName){
         if (inputTopicName == null && outputTopicName == null)
@@ -43,6 +43,10 @@ public abstract class ActiveMQEnabled {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void setDebug(boolean value) {
+        this.debug = value;
     }
 
     protected void printMessageDebugInfo(TextMessage textMessage, String receiptMode) {

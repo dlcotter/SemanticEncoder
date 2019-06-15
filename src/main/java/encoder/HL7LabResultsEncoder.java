@@ -1,6 +1,5 @@
 package encoder;
 
-import common.*;
 import ca.uhn.hl7v2.DefaultHapiContext;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.HapiContext;
@@ -15,19 +14,33 @@ import ca.uhn.hl7v2.model.v25.segment.PV1;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.validation.ValidationContext;
 import ca.uhn.hl7v2.validation.impl.ValidationContextFactory;
+import common.*;
 import org.apache.jena.rdf.model.Model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HL7VitalSignsEncoder extends Encoder implements IEncoder {
+public class HL7LabResultsEncoder extends Encoder implements IEncoder {
 
-    public HL7VitalSignsEncoder(String inputTopicName, String outputTopicName) {
+    public HL7LabResultsEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }
 
     @Override
     public List<Model> buildModel(String messageText) throws HL7Exception {
+        /*
+                String msg2 =
+                  "MSH|^~\\&|ADT1|MCM|LABADT|MCM|198808181126|SECURITY|ADT^A01|MSG00001-|P|2.5.1\r\n"
+                + "EVN|A01|198808181123\r\n"
+                + "PID|||PATID1231^5^M11||JONES^WILLIAM^A^III||19610615|M-||C|1200 N ELM STREET^^GREENSBORO^NC^27401-1020|GL|(91-9)379-1212|(919)271-3434||S||PATID12345001^2^M10|123456789|9-87654^NC\r\n"
+                + "PV1|1|I|2000^2012^01||||004777^LEBAUER^SIDNEY^J.|||SUR||-||ADM|A0-\r\n"
+                + "AL1|||^Cat dander|Respiratory distress\r\n"
+                + "OBX|1|NM|GLU^Glucose Lvl|59|mg/dL|65-99^65^99|L|||F|||20150102000000|\r\n"
+                + "DG1|1||78900^ABDMNAL PAIN UNSPCF SITE^I9CDX|||W\r\n"
+                + "DG1|3||1488000^Postoperative nausea and vomiting^SCT|||W ";
+         */
+
+
         // HL7 message structure:
         // Message -> Segment -> Field -> Component -> Subcomponent
 

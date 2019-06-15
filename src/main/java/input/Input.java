@@ -1,6 +1,6 @@
 package input;
 
-import comm.ActiveMQEnabled;
+import common.ActiveMQEnabled;
 
 import javax.jms.TextMessage;
 import java.nio.charset.Charset;
@@ -35,11 +35,9 @@ abstract class Input extends ActiveMQEnabled implements IInput {
             }
         };
 
-        /* parameterize these variables */
-        long delay  = 1000L;
-        long period = 5000L;
         Timer timer = new Timer("Timer");
-        timer.scheduleAtFixedRate(repeatedTask, delay, period);
+//        timer.scheduleAtFixedRate(repeatedTask, 1000L /*delay*/, 5000L /*period*/); //
+        timer.schedule(repeatedTask, 1000L /*delay*/);
     }
 
     abstract String getNextMessage();
