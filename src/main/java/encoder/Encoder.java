@@ -1,11 +1,18 @@
 package encoder;
 
 import ca.uhn.hl7v2.HL7Exception;
-import comm.ActiveMQEnabled;
-import org.apache.jena.rdf.model.*;
+import common.ActiveMQEnabled;
+import common.Encounter;
+import common.Observation;
+import common.Patient;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 abstract class Encoder extends ActiveMQEnabled implements IEncoder {
@@ -16,45 +23,39 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
     // abstracts away the encoding from the child classes, so that there is more
     // separation of concerns and less repetitive code.
 
-    private String FHIR  = "http://hl7.org/fhir/";
-    String LOINC = "http://loinc.org/rdf#";
-    String OWL   = "http://www.w3.org/2002/07/owl#";
-    String RDFS  = "http://www.w3.org/2000/01/rdf-schema#";
-    String SCT   = "http://snomed.info/id/";
-    String XSD   = "http://www.w3.org/2001/XMLSchema#";
+    HashMap<String,String> prefixes = new HashMap<>();
 
     Encoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
+
+        // Initialize prefix hashmap
+        prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
+        prefixes.put("LOINC" ,"http://loinc.org/rdf#)");
+        prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
+        prefixes.put("RDF"   ,"http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        prefixes.put("RDFS"  ,"http://www.w3.org/2000/01/rdf-schema#");
+        prefixes.put("SCT"   ,"http://snomed.info/id#");
+        prefixes.put("XSD"   ,"http://www.w3.org/2001/XMLSchema#");
     }
 
-    class Patient {
-        String identifier, name, birthDate, gender;
-    }
-
-    class Encounter { }
-
-    class Observation {
-        String observationID, observationDateTime;
-        CodedElement code;
-        CodedElement[] components;
-        Quantity[] quantities;
-    }
-
-    class CodedElement {
-         String observationIdentifier, displayText, nameOfCodingSystem;
-    }
-
-    class Quantity {
-        String value, unit, system;
-    }
-
-    Model encodePatient(Patient patient) {
+    // This function adds the required namespaces to the Jena model (used in the encodeXXX() functions)
+    private Model getEncoderModel() {
         Model model = ModelFactory.createDefaultModel();
-        model.setNsPrefix("fhir","http://hl7.org/fhir/");
-        model.createProperty("a","fhir:Patient");
-        model.createProperty("fhir:nodeRole","fhir:treeRoot");
+
+        for (String key : prefixes.keySet())
+            model.setNsPrefix(key, prefixes.get(key));
+
+        return model;
+    }
+
+    Model encodePatient(@NotNull Patient patient) {
+        Model model = this.getEncoderModel();
 
         Resource root = model.getResource("fhir:Patient");
+        root.addProperty(model.createProperty("rdf:type"),"fhir:Patient");
+        root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
+        root.addProperty(model.createProperty("fhir:Resource.id"), patient.identifier);
+
         root.addProperty(model.createProperty("fhir:Patient.identifier"), patient.identifier);
         root.addProperty(model.createProperty("fhir:Patient.name"      ), patient.name);
         root.addProperty(model.createProperty("fhir:Patient.birthDate" ), patient.birthDate);
@@ -63,11 +64,13 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
         return model;
     }
 
-    Model encodeEncounter(Encounter encounter) {
-        Model model = ModelFactory.createDefaultModel();
-        model.setNsPrefix("fhir","http://hl7.org/fhir/");
-        model.createProperty("a","fhir:Encounter");
-        model.createProperty("fhir:nodeRole","fhir:treeRoot");
+    Model encodeEncounter(@NotNull Encounter encounter) {
+        Model model = this.getEncoderModel();
+
+        Resource root = model.getResource("fhir:Observation");
+        root.addProperty(model.createProperty("rdf:type"),"fhir:Encounter");
+        root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
+        root.addProperty(model.createProperty("fhir:Resource.id"), encounter.identifier);
 
         // Fill in later when there's a need for it
 //        Resource root = model.getResource("Visit");
@@ -81,13 +84,12 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
         return model;
     }
 
-    Model encodeObservation(Observation observation) {
-        Model model = ModelFactory.createDefaultModel();
-        model.setNsPrefix("fhir","http://hl7.org/fhir/");
-        model.createProperty("a","fhir:Observation");
-        model.createProperty("fhir:nodeRole","fhir:treeRoot");
+    Model encodeObservation(@NotNull Observation observation) {
+        Model model = this.getEncoderModel();
 
         Resource root = model.getResource("fhir:Observation");
+        root.addProperty(model.createProperty("rdf:type"),"fhir:Observation");
+        root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
         root.addProperty(model.createProperty("fhir:Resource.id"), observation.observationID);
 
         root.addProperty(
