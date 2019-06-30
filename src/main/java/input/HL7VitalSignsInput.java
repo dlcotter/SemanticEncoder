@@ -115,6 +115,7 @@ public class HL7VitalSignsInput extends Input {
             return this.normal();
         }
     }
+
     private static class VitalSignSet {
         VitalSign systolicBloodPressure, diastolicBloodPressure, meanBloodPressure, bodyTemperature, pulseRate, SPO2;
 
@@ -154,7 +155,6 @@ public class HL7VitalSignsInput extends Input {
 
     public HL7VitalSignsInput(String outputTopicName, SimulationMode simulationMode) {
         super(outputTopicName);
-
         this.simulationMode = simulationMode;
     }
 

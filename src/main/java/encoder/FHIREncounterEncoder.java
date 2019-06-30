@@ -8,7 +8,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FHIREncounterEncoder extends Encoder implements IEncoder {
+public class FHIREncounterEncoder extends Encoder {
     public FHIREncounterEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }
@@ -24,7 +24,7 @@ public class FHIREncounterEncoder extends Encoder implements IEncoder {
         ArrayList<Model> models = new ArrayList<>();
 
         Encounter FHIREncounter = (Encounter) resource;
-        common.Encounter commonEncounter = new common.Encounter();
+        domain.Encounter commonEncounter = new domain.Encounter();
         commonEncounter.identifier = FHIREncounter.getIdentifier().get(0).getValue();
         models.add(encodeEncounter(commonEncounter));
 

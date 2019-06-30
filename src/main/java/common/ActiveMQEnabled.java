@@ -1,15 +1,15 @@
 package common;
 
+import logging.Logger;
+import logging.VoidLogger;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
-import java.util.Date;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
-public abstract class ActiveMQEnabled {
+public abstract class ActiveMQEnabled implements ILoggable {
+    /* FIELDS */
     private ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
     private Connection connection;
     protected Session session;
@@ -17,11 +17,10 @@ public abstract class ActiveMQEnabled {
     protected MessageProducer producer;
     protected String inputTopicName, outputTopicName;
     private Destination inputDestination, outputDestination;
-    private static final String logDirectory = "/home/dcotter/mscs/610-masters-project/logs/";
     boolean logDebugInfo = true, printDebugInfo = false, includeMessageContents = false;
-    private FileHandler fh;
-    private Logger logger;
+    private Logger logger = new VoidLogger();
 
+    /* CONSTRUCTORS */
     public ActiveMQEnabled(String inputTopicName, String outputTopicName){
         if (inputTopicName == null && outputTopicName == null)
             return; // should throw bad input exception here
@@ -45,33 +44,20 @@ public abstract class ActiveMQEnabled {
                 producer = session.createProducer(outputDestination);
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Configure the file handler and text formatter
-        String thisClassName = this.getClass().getName();
-        try {
-            fh = new FileHandler(logDirectory + thisClassName + ".txt", true /* append */);
-            fh.setFormatter(new SimpleFormatter());
-            logger = Logger.getLogger(thisClassName);
-            logger.addHandler(fh);
-            logger.info("TIME|CLASS|EVENT|INPUT_TOPIC|OUTPUT_TOPIC|MSG_HASH|THREAD");
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
     }
 
-    protected void finalize() {
-        fh.close();
+    /* METHODS */
+    public void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
-    protected void logMessage(TextMessage textMessage, String receiptMode) {
+    public void logMessage(TextMessage textMessage, String receiptMode) {
         // Format the log entry
         String[] fields = new String[] {
-                 String.valueOf(new Date())             // TIME
+                 String.valueOf(LocalTime.now())        // TIME
                 ,this.getClass().getName()              // CLASS
                 ,receiptMode                            // EVENT
                 ,inputTopicName                         // INPUT_TOPIC
@@ -84,14 +70,11 @@ public abstract class ActiveMQEnabled {
 
         // Log to the subscribed destinations
         if (logDebugInfo)
-                logger.info(logInfo);
+            logger.info(logInfo);
 
         if (printDebugInfo)
             System.out.println(logInfo);
     }
-
-    // To be implemented by child classes for use in incomingMessageHandler (below)
-    protected abstract List<String> processInputText(String inputMessageText);
 
     private MessageListener incomingMessageHandler = new MessageListener() {
         @Override
@@ -104,7 +87,7 @@ public abstract class ActiveMQEnabled {
             String inputMessageText = "";
             try {
                 inputMessageText = ((TextMessage) inputMessage).getText();
-                logMessage((TextMessage)inputMessage, "caught");
+                logMessage((TextMessage)inputMessage, "recd");
             } catch(JMSException e) {
                 e.printStackTrace();
             }
@@ -133,4 +116,6 @@ public abstract class ActiveMQEnabled {
             }
         }
     };
+
+    protected abstract List<String> processInputText(String inputMessageText); // to be implemented by child classes for use in incomingMessageHandler
 }

@@ -1,6 +1,6 @@
 package input;
 
-import common.Patient;
+import domain.Patient;
 
 import java.util.Stack;
 

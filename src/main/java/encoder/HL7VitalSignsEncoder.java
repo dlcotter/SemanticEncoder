@@ -1,6 +1,5 @@
 package encoder;
 
-import common.*;
 import ca.uhn.hl7v2.DefaultHapiContext;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.HapiContext;
@@ -15,13 +14,13 @@ import ca.uhn.hl7v2.model.v25.segment.PV1;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.validation.ValidationContext;
 import ca.uhn.hl7v2.validation.impl.ValidationContextFactory;
+import domain.*;
 import org.apache.jena.rdf.model.Model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HL7VitalSignsEncoder extends Encoder implements IEncoder {
-
+public class HL7VitalSignsEncoder extends Encoder {
     public HL7VitalSignsEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }

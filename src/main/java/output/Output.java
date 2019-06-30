@@ -5,7 +5,7 @@ import common.ActiveMQEnabled;
 import java.util.ArrayList;
 import java.util.List;
 
-abstract class Output extends ActiveMQEnabled implements IOutput {
+public abstract class Output extends ActiveMQEnabled {
     Output(String inputTopicName) {
         super(inputTopicName, null);
     }

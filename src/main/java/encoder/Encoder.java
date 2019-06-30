@@ -1,10 +1,10 @@
 package encoder;
 
 import ca.uhn.hl7v2.HL7Exception;
+import domain.Encounter;
+import domain.Observation;
+import domain.Patient;
 import common.ActiveMQEnabled;
-import common.Encounter;
-import common.Observation;
-import common.Patient;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-abstract class Encoder extends ActiveMQEnabled implements IEncoder {
+public abstract class Encoder extends ActiveMQEnabled {
     // The child classes of encoder are expected to build the domain objects
     // patient, encounter, and/or observation, then call encodeXXX and add
     // the resulting Model object to the list of models returned by buildModel().
@@ -34,7 +34,7 @@ abstract class Encoder extends ActiveMQEnabled implements IEncoder {
         prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
         prefixes.put("XSD"   ,"http://www.w3.org/2001/XMLSchema#");
         prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
-        prefixes.put("LOINC" ,"http://loinc.org/rdf#)");
+        prefixes.put("LOINC" ,"http://loinc.org/rdf#");
         prefixes.put("SCT"   ,"http://snomed.info/id#");
     }
 

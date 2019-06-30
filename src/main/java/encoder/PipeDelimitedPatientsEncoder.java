@@ -1,12 +1,12 @@
 package encoder;
 
-import common.Patient;
+import domain.Patient;
 import org.apache.jena.rdf.model.Model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PipeDelimitedPatientsEncoder extends Encoder implements IEncoder {
+public class PipeDelimitedPatientsEncoder extends Encoder {
     public PipeDelimitedPatientsEncoder(String inputTopicName, String outputTopicName) {
         super(inputTopicName, outputTopicName);
     }

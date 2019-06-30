@@ -16,7 +16,7 @@ public class FHIREncounterInput extends Input {
         encounter.setId("1961851");
         encounter.addIdentifier()
                     .setSystem("FDS-EncounterId")
-                    .setValue("25");
+                    .setValue("0123456789");
         encounter.setStatus(Encounter.EncounterStatus.FINISHED);
         encounter.addType()
                     .setText("Encounter for problem (procedure)")

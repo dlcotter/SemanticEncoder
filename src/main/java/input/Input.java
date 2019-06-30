@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-abstract class Input extends ActiveMQEnabled implements IInput {
+public abstract class Input extends ActiveMQEnabled {
     Input(String outputTopicName) {
         super(null, outputTopicName);
     }
@@ -27,8 +27,8 @@ abstract class Input extends ActiveMQEnabled implements IInput {
                     // Tell the producer to send the message
                     producer.send(textMessage);
 
-                    // Print debug info
-                    printMessageDebugInfo(textMessage, "sent");
+                    // Log debug info (not handled in superclass because there is no "message received" event to trigger handler
+                    logMessage(textMessage, "sent");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -36,8 +36,8 @@ abstract class Input extends ActiveMQEnabled implements IInput {
         };
 
         Timer timer = new Timer("Timer");
-//        timer.scheduleAtFixedRate(repeatedTask, 1000L /*delay*/, 5000L /*period*/); //
-        timer.schedule(repeatedTask, 1000L /*delay*/);
+        timer.scheduleAtFixedRate(repeatedTask, 1000L /*delay*/, 5000L /*period*/);
+//        timer.schedule(repeatedTask, 1000L /*delay*/);
     }
 
     abstract String getNextMessage();
