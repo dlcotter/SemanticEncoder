@@ -10,21 +10,27 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public abstract class Input extends ActiveMQEnabled {
+    /* FIELDS */
+    private boolean repeat = true;
+    private long delay = 1000L, period = 1000L;
+
+    /* CONSTRUCTORS */
     Input(String outputTopicName) {
         super(null, outputTopicName);
     }
 
+    /* METHODS */
     public void start() {
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
                 try {
                     // Create message and add MD5 checksum as property
                     String message = getNextMessage();
-                    TextMessage textMessage = session.createTextMessage(message);
-                    String md5Hash = getMD5Checksum(message);
-                    textMessage.setStringProperty("md5", md5Hash);
+                    if (message.isEmpty())
+                        return;
 
                     // Tell the producer to send the message
+                    TextMessage textMessage = session.createTextMessage(message);
                     producer.send(textMessage);
 
                     // Log debug info (not handled in superclass because there is no "message received" event to trigger handler
@@ -36,8 +42,10 @@ public abstract class Input extends ActiveMQEnabled {
         };
 
         Timer timer = new Timer("Timer");
-        timer.scheduleAtFixedRate(repeatedTask, 1000L /*delay*/, 5000L /*period*/);
-//        timer.schedule(repeatedTask, 1000L /*delay*/);
+        if (repeat)
+            timer.scheduleAtFixedRate(repeatedTask, delay, period);
+        else
+            timer.schedule(repeatedTask, delay);
     }
 
     abstract String getNextMessage();
@@ -56,5 +64,17 @@ public abstract class Input extends ActiveMQEnabled {
             result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
         }
         return result.toString();
+    }
+
+    public void setRepeat(boolean repeat) {
+        this.repeat = repeat;
+    }
+
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    public void setPeriod(long period) {
+        this.period = period;
     }
 }

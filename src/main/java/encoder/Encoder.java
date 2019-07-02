@@ -1,10 +1,10 @@
 package encoder;
 
 import ca.uhn.hl7v2.HL7Exception;
+import common.ActiveMQEnabled;
 import domain.Encounter;
 import domain.Observation;
 import domain.Patient;
-import common.ActiveMQEnabled;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -19,9 +19,9 @@ public abstract class Encoder extends ActiveMQEnabled {
     // The child classes of encoder are expected to build the domain objects
     // patient, encounter, and/or observation, then call encodeXXX and add
     // the resulting Model object to the list of models returned by buildModel().
-    // The current design, in which the superclass encodes the model to RDF,
-    // abstracts away the encoding from the child classes, so that there is more
-    // separation of concerns and less repetitive code.
+    // The current design, in which the superclass encodes the model to RDF, rather
+    // than the child class doing it directly, abstracts away the encoding from the
+    // child classes, so that there is more separation of concerns and less repetitive code.
 
     HashMap<String,String> prefixes = new HashMap<>();
 
@@ -51,15 +51,40 @@ public abstract class Encoder extends ActiveMQEnabled {
     Model encodePatient(@NotNull Patient patient) {
         Model model = this.getEncoderModel();
 
-        Resource root = model.getResource("fhir:Patient");
+        Resource root = model.getResource("fhir:Patient/" + patient.identifier);
         root.addProperty(model.createProperty("rdf:type"),"fhir:Patient");
         root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
         root.addProperty(model.createProperty("fhir:Resource.id"), patient.identifier);
 
-        root.addProperty(model.createProperty("fhir:Patient.identifier"), patient.identifier);
-        root.addProperty(model.createProperty("fhir:Patient.name"      ), patient.name);
-        root.addProperty(model.createProperty("fhir:Patient.birthDate" ), patient.birthDate);
-        root.addProperty(model.createProperty("fhir:Patient.gender"    ), patient.gender);
+      root.addProperty(
+        model.createProperty("fhir:Patient.identifier"),
+        model.createResource()
+                .addProperty(model.createProperty("fhir:index"), "0")
+                .addProperty(
+                        model.createProperty("fhir:Identifier.value"),
+                        model.createResource()
+                                .addProperty(model.createProperty("fhir:index"), "0")
+                                .addProperty(model.createProperty("fhir:value"), patient.identifier)));
+
+        root.addProperty(
+                model.createProperty("fhir:Patient.name"),
+                model.createResource()
+                        .addProperty(model.createProperty("fhir:index"), "0")
+                        .addProperty(
+                                model.createProperty("fhir:HumanName.given"),
+                                model.createResource()
+                                        .addProperty(model.createProperty("fhir:index"), "0")
+                                        .addProperty(model.createProperty("fhir:value"), patient.name)));
+
+        root.addProperty(
+                model.createProperty("fhir:Patient.birthDate"),
+                model.createResource()
+                        .addProperty(model.createProperty("fhir:value"), "\"" + patient.birthDate + "\"^^xsd:date"));
+
+        root.addProperty(
+                model.createProperty("fhir:Patient.gender"),
+                model.createResource()
+                        .addProperty(model.createProperty("fhir:value"), patient.gender));
 
         return model;
     }
@@ -67,7 +92,7 @@ public abstract class Encoder extends ActiveMQEnabled {
     Model encodeEncounter(@NotNull Encounter encounter) {
         Model model = this.getEncoderModel();
 
-        Resource root = model.getResource("fhir:Observation");
+        Resource root = model.getResource("fhir:Encounter");
         root.addProperty(model.createProperty("rdf:type"),"fhir:Encounter");
         root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
 //        root.addProperty(model.createProperty("fhir:Resource.id"), encounter.identifier);
@@ -87,7 +112,7 @@ public abstract class Encoder extends ActiveMQEnabled {
     Model encodeObservation(@NotNull Observation observation) {
         Model model = this.getEncoderModel();
 
-        Resource root = model.getResource("fhir:Observation");
+        Resource root = model.getResource("fhir:Observation/" + observation.observationID);
         root.addProperty(model.createProperty("rdf:type"),"fhir:Observation");
         root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
         root.addProperty(model.createProperty("fhir:Resource.id"), observation.observationID);
@@ -126,18 +151,16 @@ public abstract class Encoder extends ActiveMQEnabled {
             root.addProperty(
                     model.createProperty("fhir:Observation.component.valueQuantity"),
                     model.createResource()
-                            .addProperty(
-                                    model.createProperty("fhir:Observation.component.valueQuantity"),
-                                    model.createResource()
-                                            .addProperty(model.createProperty("fhir:index"), ((Integer) i).toString())
-                                            .addProperty(model.createProperty("fhir:Quantity.value"), observation.quantities[i].value)
-                                            .addProperty(model.createProperty("fhir:Quantity.unit"), observation.quantities[i].unit)
-                                            .addProperty(model.createProperty("fhir:Quantity.system"), observation.quantities[i].system)));
+                            .addProperty(model.createProperty("fhir:index"), ((Integer) i).toString())
+                            .addProperty(model.createProperty("fhir:Quantity.value"), observation.quantities[i].value)
+                            .addProperty(model.createProperty("fhir:Quantity.unit"), observation.quantities[i].unit)
+                            .addProperty(model.createProperty("fhir:Quantity.system"), observation.quantities[i].system));
         }
 
         return model;
     }
 
+    // This method is overridden in child classes, which handle different types of inputs, i.e. HL7v2, FHIR, CSV, etc.
     public abstract List<Model> buildModel(String message) throws HL7Exception;
 
     @Override

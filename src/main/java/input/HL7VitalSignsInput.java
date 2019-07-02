@@ -12,144 +12,18 @@ import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
 import ca.uhn.hl7v2.model.v25.segment.PID;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
-import org.jetbrains.annotations.NotNull;
+import domain.Patient;
+import domain.VitalSign;
+import domain.VitalSignSet;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Random;
 
 public class HL7VitalSignsInput extends Input {
     public enum SimulationMode { NORMAL, HYPOTENSION, HYPOTHERMIA }
-    private enum VitalSignType { SYSTOLIC_BLOOD_PRESSURE, DIASTOLIC_BLOOD_PRESSURE, MEAN_BLOOD_PRESSURE, BODY_TEMPERATURE, PULSE_RATE, SPO2 }
-    private enum VitalSignRange { LOW, NORMAL, HIGH }
-    private static class VitalSign {
-        VitalSignType type;
-        VitalSignRange range;
-        String name, code;
-        double minimumNormal, maximumNormal;
-
-        public VitalSign(@NotNull VitalSignType type, VitalSignRange range) {
-            this.type = type;
-            this.range = range;
-
-            switch (type) {
-                case SYSTOLIC_BLOOD_PRESSURE:
-                    this.name = "Systolic blood pressure";
-                    this.code = "271649006";
-                    this.minimumNormal = 90;
-                    this.maximumNormal = 120;
-                    break;
-
-                case DIASTOLIC_BLOOD_PRESSURE:
-                    this.name = "Diastolic blood pressure";
-                    this.code = "271650006";
-                    this.minimumNormal = 60;
-                    this.maximumNormal = 80;
-                    break;
-
-                case MEAN_BLOOD_PRESSURE:
-                    this.name = "Mean blood pressure";
-                    this.code = "6797001";
-                    this.minimumNormal = 92;
-                    this.maximumNormal = 96;
-                    break;
-
-                case BODY_TEMPERATURE:
-                    this.name = "Body temperature";
-                    this.code = "386725007";
-                    this.minimumNormal = 36.1;
-                    this.maximumNormal = 37.2;
-                    break;
-
-                case PULSE_RATE:
-                    this.name = "Pulse rate";
-                    this.code = "78564009";
-                    this.minimumNormal = 60;
-                    this.maximumNormal = 100;
-                    break;
-
-                case SPO2:
-                    this.name = "SpO2";
-                    this.code = "431314004";
-                    this.minimumNormal = 94;
-                    this.maximumNormal = 100;
-                    break;
-            }
-        }
-
-        public VitalSignType getType() {
-            return this.type;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-
-        public String getCode() {
-            return this.code;
-        }
-
-        double low() {
-            return minimumNormal - (Math.random()*(maximumNormal - minimumNormal));
-        }
-
-        double normal() {
-            return minimumNormal + (Math.random()*(maximumNormal - minimumNormal));
-        }
-
-        double high() {
-            return maximumNormal + (Math.random()*(maximumNormal - minimumNormal));
-        }
-
-        public double getValue() {
-            switch (range) {
-                case LOW:
-                    return this.low();
-                case HIGH:
-                    return this.high();
-                case NORMAL:
-                    return this.normal();
-            }
-
-            return this.normal();
-        }
-    }
-
-    private static class VitalSignSet {
-        VitalSign systolicBloodPressure, diastolicBloodPressure, meanBloodPressure, bodyTemperature, pulseRate, SPO2;
-
-        public VitalSignSet(SimulationMode simulationMode) {
-            switch (simulationMode) {
-                case NORMAL:
-                    this.systolicBloodPressure = new VitalSign(VitalSignType.SYSTOLIC_BLOOD_PRESSURE, VitalSignRange.NORMAL);
-                    this.diastolicBloodPressure = new VitalSign(VitalSignType.DIASTOLIC_BLOOD_PRESSURE, VitalSignRange.NORMAL);
-                    this.meanBloodPressure = new VitalSign(VitalSignType.MEAN_BLOOD_PRESSURE, VitalSignRange.NORMAL);
-                    this.bodyTemperature = new VitalSign(VitalSignType.BODY_TEMPERATURE, VitalSignRange.NORMAL);
-                    this.pulseRate = new VitalSign(VitalSignType.PULSE_RATE, VitalSignRange.NORMAL);
-                    this.SPO2 = new VitalSign(VitalSignType.SPO2, VitalSignRange.NORMAL);
-                    break;
-
-                case HYPOTENSION:
-                    this.systolicBloodPressure = new VitalSign(VitalSignType.SYSTOLIC_BLOOD_PRESSURE, VitalSignRange.LOW);
-                    this.diastolicBloodPressure = new VitalSign(VitalSignType.DIASTOLIC_BLOOD_PRESSURE, VitalSignRange.LOW);
-                    this.meanBloodPressure = new VitalSign(VitalSignType.MEAN_BLOOD_PRESSURE, VitalSignRange.LOW);
-                    this.bodyTemperature = new VitalSign(VitalSignType.BODY_TEMPERATURE, Math.random() > 0.5 ? VitalSignRange.LOW : VitalSignRange.NORMAL);
-                    this.pulseRate = new VitalSign(VitalSignType.PULSE_RATE, VitalSignRange.HIGH);
-                    this.SPO2 = new VitalSign(VitalSignType.SPO2, VitalSignRange.LOW);
-                    break;
-
-                case HYPOTHERMIA:
-                    this.systolicBloodPressure = new VitalSign(VitalSignType.SYSTOLIC_BLOOD_PRESSURE, VitalSignRange.HIGH);
-                    this.diastolicBloodPressure = new VitalSign(VitalSignType.DIASTOLIC_BLOOD_PRESSURE, VitalSignRange.HIGH);
-                    this.meanBloodPressure = new VitalSign(VitalSignType.MEAN_BLOOD_PRESSURE, VitalSignRange.HIGH);
-                    this.bodyTemperature = new VitalSign(VitalSignType.BODY_TEMPERATURE, VitalSignRange.LOW);
-                    this.pulseRate = new VitalSign(VitalSignType.PULSE_RATE, VitalSignRange.HIGH);
-                    this.SPO2 = new VitalSign(VitalSignType.SPO2, VitalSignRange.NORMAL);
-                    break;
-            }
-        }
-    }
 
     SimulationMode simulationMode;
 
@@ -163,17 +37,15 @@ public class HL7VitalSignsInput extends Input {
         String message = "";
 
         try {
-            message = buildVitalSignsORU_R01(new VitalSignSet(simulationMode));
+            ORU_R01 oru_r01 = buildVitalSignsORU_R01(new VitalSignSet(simulationMode));
+            message = oru_r01.encode();
         } catch(Exception e) {
             e.printStackTrace();
         }
-
         return message;
     }
 
-    private String buildVitalSignsORU_R01(VitalSignSet vitals)
-        throws HL7Exception, IOException {
-
+    private ORU_R01 buildVitalSignsORU_R01(VitalSignSet vitals) throws HL7Exception, IOException {
         /**
          * We are going to create an ORU_R01 message, for the purpose of demonstrating the creation and
          * population of an OBX segment.
@@ -239,14 +111,15 @@ public class HL7VitalSignsInput extends Input {
         ORU_R01_PATIENT_RESULT patientResultGroup = message.getPATIENT_RESULT();
         ORU_R01_PATIENT patientGroup = patientResultGroup.getPATIENT();
 
-        PID pidSegment = patientGroup.getPID();
-        pidSegment.getPid1_SetIDPID().setValue("0123456789");
+        Patient patient = Patient.getSamplePatients().get(new Random().nextInt(10));
 
-        pidSegment.getPid3_PatientIdentifierList(0).getCx1_IDNumber().setValue("123456789");
-        pidSegment.getPid5_PatientName(0).getXpn1_FamilyName().getFn1_Surname().setValue("Candy");
-        pidSegment.getPid5_PatientName(0).getXpn2_GivenName().setValue("John");
-        pidSegment.getPid7_DateTimeOfBirth().getTs1_Time().setValue("19501031");
-        pidSegment.getPid8_AdministrativeSex().setValue("male");
+        PID pidSegment = patientGroup.getPID();
+        pidSegment.getPid1_SetIDPID().setValue(patient.identifier);
+        pidSegment.getPid3_PatientIdentifierList(0).getCx1_IDNumber().setValue(patient.identifier);
+        pidSegment.getPid5_PatientName(0).getXpn1_FamilyName().getFn1_Surname().setValue(patient.name.split(",")[0]);
+        pidSegment.getPid5_PatientName(0).getXpn2_GivenName().setValue(patient.name.split(",")[1]);
+        pidSegment.getPid7_DateTimeOfBirth().getTs1_Time().setValue(patient.birthDate);
+        pidSegment.getPid8_AdministrativeSex().setValue(patient.gender);
 
         ORU_R01_VISIT visitGroup = patientGroup.getVISIT();
         PV1 pv1Segment = visitGroup.getPV1();
@@ -263,7 +136,7 @@ public class HL7VitalSignsInput extends Input {
 
         // Populate the OBR
         OBR obrSegment = orderObservationGroup.getOBR();
-        obrSegment.getObr1_SetIDOBR().setValue("1376793");
+        obrSegment.getObr1_SetIDOBR().setValue(this.randomAlpha(10));
         obrSegment.getObr4_UniversalServiceIdentifier().getCe1_Identifier().setValue("28562-7");
         obrSegment.getObr4_UniversalServiceIdentifier().getCe2_Text().setValue("Vital Signs");
         obrSegment.getObr4_UniversalServiceIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
@@ -277,15 +150,15 @@ public class HL7VitalSignsInput extends Input {
          * current number of repetitions,and a new repetition will be created.
          */
 
-        buildVitalSignOBX(message, orderObservationGroup, vitals.systolicBloodPressure, 0);
-        buildVitalSignOBX(message, orderObservationGroup, vitals.diastolicBloodPressure, 1);
-        buildVitalSignOBX(message, orderObservationGroup, vitals.meanBloodPressure, 2);
-        buildVitalSignOBX(message, orderObservationGroup, vitals.bodyTemperature, 3);
-        buildVitalSignOBX(message, orderObservationGroup, vitals.pulseRate, 4);
-        buildVitalSignOBX(message, orderObservationGroup, vitals.SPO2, 5);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getSystolicBloodPressure(), 0);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getDiastolicBloodPressure(), 1);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getMeanBloodPressure(), 2);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getBodyTemperature(), 3);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getPulseRate(), 4);
+        buildVitalSignOBX(message, orderObservationGroup, vitals.getSPO2(), 5);
 
-        // Print the message (remember, the MSH segment was not fully or correctly populated)
-        return message.encode();
+        // Return the message (remember, the MSH segment was not fully or correctly populated)
+        return message;
     }
 
     private void buildVitalSignOBX(ORU_R01 message, ORU_R01_ORDER_OBSERVATION orderObservationGroup, VitalSign vitalSign, int rep) throws DataTypeException {
@@ -301,5 +174,16 @@ public class HL7VitalSignsInput extends Input {
         codedElement2.getText().setValue("mm[Hg]");
         codedElement2.getNameOfCodingSystem().setValue("UOM"); // http://unitsofmeasure.org
         obxSegment2.getObx5_ObservationValue(0).setData(codedElement2);
+    }
+
+    private static final String ALPHA_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    public static String randomAlpha(int count) {
+        StringBuilder builder = new StringBuilder();
+        while (count-- != 0) {
+            int character = (int)(Math.random()* ALPHA_STRING.length());
+            builder.append(ALPHA_STRING.charAt(character));
+        }
+        return builder.toString();
     }
 }

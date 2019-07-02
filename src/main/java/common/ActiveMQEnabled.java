@@ -55,6 +55,15 @@ public abstract class ActiveMQEnabled implements ILoggable {
     }
 
     public void logMessage(TextMessage textMessage, String receiptMode) {
+        // Get the message ID
+        String messageID;
+        try {
+             messageID = textMessage.getJMSMessageID();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
         // Format the log entry
         String[] fields = new String[] {
                  String.valueOf(LocalTime.now())        // TIME
@@ -62,7 +71,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
                 ,receiptMode                            // EVENT
                 ,inputTopicName                         // INPUT_TOPIC
                 ,outputTopicName                        // OUTPUT_TOPIC
-                ,String.valueOf(textMessage.hashCode()) // MSG_HASH
+                ,messageID                              // MSG_HASH
                 ,Thread.currentThread().getName()       // THREAD
                 //textMessage.getText()                 // message contents - not sure how to enable multiline message content debugging
         };

@@ -18,7 +18,7 @@ public class PipeDelimitedPatientsEncoder extends Encoder {
         if (message == null || message.isEmpty())
             return models;
 
-        String[] fields = message.split("|");
+        String[] fields = message.split("\\|");
 
         Patient patient = new Patient() {{ identifier = fields[0]; name = fields[1]; birthDate = fields[2]; gender = fields[3]; }};
         models.add(encodePatient(patient));

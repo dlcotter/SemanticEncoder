@@ -22,15 +22,6 @@ public class HighBloodPressureQuery extends Query {
 
         Model model = dataset.getDefaultModel();
         dataset.begin(ReadWrite.READ);
-//        try {
-//            StmtIterator it = (StmtIterator)model.listStatements().filterDrop(statement -> false);
-//            while (it.hasNext()) {
-//                dataset.commit();
-//                outputMessageTexts.add(inputMessageText);
-//            }
-//        } finally {
-//            dataset.end();
-//        }
         try {
             String prefix = "PREFIX fhir:<http://hl7.org/fhir>\n";
             String query = "SELECT ?x WHERE { ?x <fhir:Coding.code> '85354-9' }";

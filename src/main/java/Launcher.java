@@ -1,11 +1,11 @@
 import common.ActiveMQEnabled;
 import encoder.HL7VitalSignsEncoder;
+import encoder.PipeDelimitedPatientsEncoder;
 import input.HL7VitalSignsInput;
 import input.Input;
+import input.PipeDelimitedPatientsInput;
 import logging.CSVLogger;
 import logging.Logger;
-import output.ScreenOutput;
-import query.HighBloodPressureQuery;
 import store.TDBStore;
 
 import java.util.ArrayList;
@@ -15,29 +15,25 @@ public class Launcher {
     public static void main(String[]  args) {
         /* INPUTS */
         List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.CSV"));
+        //components.add(new FHIREncounterInput("INPUT.ENCOUNTERS.FHIR")); // Use  HAPITester class in the examples package to download FHIR messages from the test server and post them to the message queue.
         components.add(new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.HYPOTENSION));
-//        Input input2 = new PipeDelimitedPatientsInput("INPUT.PATIENTS.CSV");
-//        Input input3 = new FHIREncounterInput("INPUT.ENCOUNTERS.FHIR");
-
-        // Add FHIR producer p2
-        // * Use the HAPITester class in the examples package to download FHIR
-        // messages from the test server and post them to the message queue.
 
         /* ENCODERS */
+        components.add(new PipeDelimitedPatientsEncoder("INPUT.PATIENTS.CSV","STORE.TDB"));
+//        components.add(new FHIREncounterEncoder("INPUT.ENCOUNTERS.FHIR","STORE.TDB"));
         components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","STORE.TDB"));
-//        Encoder e2 = new PipeDelimitedPatientsEncoder("INPUT.PATIENTS.CSV","STORE.TDB");
-//        Encoder e3 = new FHIREncounterEncoder("INPUT.ENCOUNTERS.FHIR","STORE.TDB");
 
         /* STORE */
         components.add(new TDBStore("STORE.TDB","QUERY"));
 
         /* QUERY ENGINE */
-//        Query q1 = new PassThroughQuery("QUERY","QUERY.PASSTHROUGH");
-        components.add(new HighBloodPressureQuery("QUERY","QUERY.HIGH_BP"));
+//        components.add(new PassThroughQuery("QUERY","QUERY.PASSTHROUGH"));
+//        components.add(new HighBloodPressureQuery("QUERY","QUERY.HIGH_BP"));
 
         /* OUTPUTS */
-//        Output o1 = new ScreenOutput("QUERY.PASSTHROUGH");
-        components.add(new ScreenOutput("QUERY.HIGH_BP"));
+//        components.add(new ScreenOutput("QUERY.PASSTHROUGH"));
+//        components.add(new ScreenOutput("QUERY.HIGH_BP"));
         // * Add file output
         // * Add CEP output
         // * Add OMOP output
