@@ -6,6 +6,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class ActiveMQEnabled implements ILoggable {
@@ -13,14 +14,14 @@ public abstract class ActiveMQEnabled implements ILoggable {
     private ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
     private Connection connection;
     protected Session session;
-    protected MessageConsumer consumer;
+    private MessageConsumer consumer;
     protected MessageProducer producer;
     protected String inputTopicName, outputTopicName;
     private Destination inputDestination, outputDestination;
-    boolean logDebugInfo = true, printDebugInfo = false, includeMessageContents = false;
+    private boolean logDebugInfo = true, printDebugInfo = false, printMessageContents = false;
     private Logger logger = new VoidLogger();
+    protected HashMap<String,String> prefixes = new HashMap<>();
 
-    /* CONSTRUCTORS */
     public ActiveMQEnabled(String inputTopicName, String outputTopicName){
         if (inputTopicName == null && outputTopicName == null)
             return; // should throw bad input exception here
@@ -47,10 +48,19 @@ public abstract class ActiveMQEnabled implements ILoggable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // Initialize prefix hash
+        prefixes.put("RDF"   ,"http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        prefixes.put("RDFS"  ,"http://www.w3.org/2000/01/rdf-schema#");
+        prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
+        prefixes.put("XSD"   ,"http://www.w3.org/2001/XMLSchema#");
+        prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
+        prefixes.put("LOINC" ,"http://loinc.org/rdf#");
+        prefixes.put("SCT"   ,"http://snomed.info/id#");
     }
 
-    /* METHODS */
     public void setLogger(Logger logger) {
+        // Replaces the default placeholder VoidLogger with a logger that actually does something
         this.logger = logger;
     }
 
@@ -127,4 +137,28 @@ public abstract class ActiveMQEnabled implements ILoggable {
     };
 
     protected abstract List<String> processInputText(String inputMessageText); // to be implemented by child classes for use in incomingMessageHandler
+
+    public boolean isLogDebugInfo() {
+        return logDebugInfo;
+    }
+
+    public void setLogDebugInfo(boolean logDebugInfo) {
+        this.logDebugInfo = logDebugInfo;
+    }
+
+    public boolean isPrintDebugInfo() {
+        return printDebugInfo;
+    }
+
+    public void setPrintDebugInfo(boolean printDebugInfo) {
+        this.printDebugInfo = printDebugInfo;
+    }
+
+    public boolean isPrintMessageContents() {
+        return printMessageContents;
+    }
+
+    public void setPrintMessageContents(boolean printMessageContents) {
+        this.printMessageContents = printMessageContents;
+    }
 }

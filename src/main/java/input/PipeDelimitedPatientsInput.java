@@ -15,9 +15,7 @@ public class PipeDelimitedPatientsInput extends Input {
         samplePatients = Patient.getSamplePatients();
         samplePatientCount = samplePatients.size();
 
-        // Send patients less frequently than observations
-        this.setDelay(0L);
-        this.setPeriod(5L);
+        // Iterate through list, i.e. repeat, until list is exhausted
         this.setRepeat(true);
     }
 

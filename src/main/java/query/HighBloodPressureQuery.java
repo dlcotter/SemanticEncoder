@@ -1,46 +1,21 @@
 package query;
 
-import org.apache.jena.query.*;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.sparql.JenaTransactionException;
-import org.apache.jena.tdb.TDBFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-
 // Search for blood pressure readings over 120
 public class HighBloodPressureQuery extends Query {
-    private Dataset dataset = TDBFactory.createDataset("./tdb/" + inputTopicName);
+    private static final String QUERY
+      = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
+      + "SELECT ?obs_resource ?value\n"
+      + "WHERE { ?obs_resource    <rdf:type>                                 \"fhir:Observation\" .\n"
+      + "        ?obs_resource    <fhir:Observation.component.code>          ?code_resource     .\n"
+      + "        ?code_resource   <fhir:CodeableConcept.coding>              ?coding_resource   .\n"
+      + "        ?coding_resource <fhir:Coding.system>                       \"SNOMED-CT\"        .\n"
+      + "        ?coding_resource <fhir:Coding.code>                         \"271649006\"        .\n"
+      + "        ?obs_resource    <fhir:Observation.component.valueQuantity> ?value_resource    .\n"
+      + "        ?value_resource  <fhir:Quantity.value>                      ?value             .\n"
+      + "FILTER (xsd:decimal(?value) > 120)\n"
+      + "}\n";
 
     public HighBloodPressureQuery(String inputTopicName, String outputTopicName) {
-        super(inputTopicName, outputTopicName);
-    }
-
-    @Override
-    protected List<String> processInputText(String inputMessageText) {
-        List<String> outputMessageTexts = new ArrayList<>();
-
-        Model model = dataset.getDefaultModel();
-        dataset.begin(ReadWrite.READ);
-        try {
-            String prefix = "PREFIX fhir:<http://hl7.org/fhir>\n";
-            String query = "SELECT ?x WHERE { ?x <fhir:Coding.code> '85354-9' }";
-            QueryExecution queryExecution = QueryExecutionFactory.create(prefix + query, dataset);
-            ResultSet resultSet = queryExecution.execSelect();
-            while (resultSet.hasNext()) {
-                QuerySolution next = resultSet.next();
-
-                outputMessageTexts.add(next.toString());
-
-                // temporary debugging output
-                System.out.println(next.toString());
-            }
-        } catch (JenaTransactionException e) {
-            e.printStackTrace();
-        } finally {
-            dataset.end();
-        }
-
-        return outputMessageTexts;
+        super(inputTopicName, outputTopicName, QUERY);
     }
 }

@@ -1,9 +1,9 @@
 package input;
 
+
 import common.ActiveMQEnabled;
 
 import javax.jms.TextMessage;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -24,7 +24,7 @@ public abstract class Input extends ActiveMQEnabled {
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
                 try {
-                    // Create message and add MD5 checksum as property
+                    // Create message
                     String message = getNextMessage();
                     if (message.isEmpty())
                         return;
@@ -54,16 +54,6 @@ public abstract class Input extends ActiveMQEnabled {
     protected List<String> processInputText(String inputMessageText) {
         // Inputs never catch incoming messages, so they can just return an empty list
         return new ArrayList<>();
-    }
-
-    private String getMD5Checksum(String checkString) {
-        byte[] b = checkString.getBytes(Charset.forName("UTF-8"));
-        StringBuilder result = new StringBuilder();
-
-        for (byte value : b) {
-            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
-        }
-        return result.toString();
     }
 
     public void setRepeat(boolean repeat) {

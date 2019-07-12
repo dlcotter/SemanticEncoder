@@ -9,7 +9,7 @@ public class CSVLogger extends Logger {
 
     public CSVLogger(String loggerName, String logFilePath) {
         try {
-            fileHandler = new FileHandler(logFilePath, true /* append */);
+            fileHandler = new FileHandler(logFilePath, false /* append */);
         } catch (Exception e) {
             e.printStackTrace();
             return;

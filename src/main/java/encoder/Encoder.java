@@ -113,6 +113,7 @@ public abstract class Encoder extends ActiveMQEnabled {
         Model model = this.getEncoderModel();
 
         Resource root = model.getResource("fhir:Observation/" + observation.observationID);
+
         root.addProperty(model.createProperty("rdf:type"),"fhir:Observation");
         root.addProperty(model.createProperty("fhir:nodeRole"),"fhir:treeRoot");
         root.addProperty(model.createProperty("fhir:Resource.id"), observation.observationID);
