@@ -37,7 +37,7 @@ public abstract class Query extends ActiveMQEnabled {
                 QuerySolution next = resultSet.next();
                 outputMessageTexts.add(toString());
 
-                if (this.printMessageContents)
+                if (super.printMessageContents())
                     System.out.println(next.toString());
             }
         } catch (JenaTransactionException e) {

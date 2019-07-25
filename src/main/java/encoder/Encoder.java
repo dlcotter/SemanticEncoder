@@ -38,10 +38,11 @@ public abstract class Encoder extends ActiveMQEnabled {
         prefixes.put("SCT"   ,"http://snomed.info/id#");
     }
 
-    // This function adds the required namespaces to the Jena model (used in the encodeXXX() functions)
+    // This function sets up a common model that all the subsequent encoder functions use
     private Model getEncoderModel() {
         Model model = ModelFactory.createDefaultModel();
 
+        // Add the required namespaces to the Jena model (used in the encodeXXX() functions)
         for (String key : prefixes.keySet())
             model.setNsPrefix(key, prefixes.get(key));
 

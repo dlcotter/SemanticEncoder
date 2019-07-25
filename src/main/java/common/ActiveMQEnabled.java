@@ -138,7 +138,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
 
     protected abstract List<String> processInputText(String inputMessageText); // to be implemented by child classes for use in incomingMessageHandler
 
-    public boolean isLogDebugInfo() {
+    public boolean logDebugInfo() {
         return logDebugInfo;
     }
 
@@ -146,7 +146,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
         this.logDebugInfo = logDebugInfo;
     }
 
-    public boolean isPrintDebugInfo() {
+    public boolean printDebugInfo() {
         return printDebugInfo;
     }
 
@@ -154,7 +154,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
         this.printDebugInfo = printDebugInfo;
     }
 
-    public boolean isPrintMessageContents() {
+    public boolean printMessageContents() {
         return printMessageContents;
     }
 

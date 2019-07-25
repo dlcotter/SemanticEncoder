@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Output extends ActiveMQEnabled {
+    protected static final String OUTPUT_DIRECTORY = "./output/";
+
     Output(String inputTopicName) {
         super(inputTopicName, null);
     }

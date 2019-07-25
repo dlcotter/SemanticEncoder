@@ -9,23 +9,40 @@ import output.FileOutput;
 import query.HighBloodPressureQuery;
 import store.TDBStore;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Launcher {
     private static final String LOG_DIRECTORY = "./logs/";
     private static final String LOG_LINE_FORMAT = "%5$s%6$s%n"; // make output one liner  %1$tF %1$tT %4$s %2$s
 
     public Launcher() {
-        // Set up loggers - passing the same logger w/same file handler to each component so that they log to a single file
-        System.setProperty("java.util.logging.SimpleFormatter.format", LOG_LINE_FORMAT);
     }
 
-    public static void main(String[]  args) {
-        List<ActiveMQEnabled> components = generateFHIROutputToFile();
+    public static void main(String[] args) {
+        List<ActiveMQEnabled> components = new ArrayList<>();
 
-        // Attach logger
-        Logger commonLogger = new CSVLogger("CommonLogger", LOG_DIRECTORY + "common.log");
+        int option = 0;
+        String mode = "common";
+
+        switch (option) {
+            case 0:
+                components = exportFHIRforValidation();
+                mode = "exportFHIRforValidation";
+                break;
+            case 1:
+                components = runCEPPipeline();
+                mode = "runCEPPipeline";
+                break;
+        }
+
+        // Attach loggers - passing the same logger w/same file handler to each component so that they log to a single file
+        System.setProperty("java.util.logging.SimpleFormatter.format", LOG_LINE_FORMAT);
+        String localDateTime = DateTimeFormatter.ofPattern("yyyyMMddhhmmss", Locale.ENGLISH).format(LocalDateTime.now());
+        Logger commonLogger = new CSVLogger("CommonLogger", LOG_DIRECTORY + localDateTime + "." + mode  + ".log");
         commonLogger.info("TIME|CLASS|EVENT|INPUT_TOPIC|OUTPUT_TOPIC|MSG_HASH|THREAD");
         for (ActiveMQEnabled component : components)
             component.setLogger(commonLogger);
@@ -36,18 +53,19 @@ public class Launcher {
                 ((Input)component).start();
     }
 
-    private static List<ActiveMQEnabled> generateFHIROutputToFile() {
+    private static List<ActiveMQEnabled> exportFHIRforValidation() {
         List<ActiveMQEnabled> components = new ArrayList<>();
-
-        components.add(new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.NORMAL));
+        HL7VitalSignsInput hl7VitalSignsInput = new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.NORMAL);
+        hl7VitalSignsInput.setRepeat(false);
+        components.add(hl7VitalSignsInput);
         components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","OUTPUT.FILE"));
         components.add(new FileOutput("OUTPUT.FILE"));
+
         return components;
     }
 
     private static List<ActiveMQEnabled> runCEPPipeline() {
         List<ActiveMQEnabled> components = new ArrayList<>();
-
         components.add(new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.HYPOTENSION));
         components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","STORE.TDB"));
         components.add(new TDBStore("STORE.TDB","QUERY"));
