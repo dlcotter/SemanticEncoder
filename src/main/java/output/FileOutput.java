@@ -11,7 +11,6 @@ import java.util.Locale;
 public class FileOutput extends Output {
     private FileWriter fileWriter;
     private BufferedWriter bufferedWriter;
-    private String localDateTime = DateTimeFormatter.ofPattern("yyyyMMddhhmmss", Locale.ENGLISH).format(LocalDateTime.now());
 
     public FileOutput(String inputTopicName) {
         super(inputTopicName);
@@ -19,8 +18,12 @@ public class FileOutput extends Output {
 
     @Override
     protected List<String> processInputText(String inputMessageText) {
+        // local date/time needs to be declared here, rather than in class fields, so that it changes
+        // each time it receives a message and therefore writes a unique file per resource
+        String localDateTime = DateTimeFormatter.ofPattern("A" /* ms of day */, Locale.ENGLISH).format(LocalDateTime.now());
+
         try {
-            fileWriter = new FileWriter(OUTPUT_DIRECTORY + localDateTime + "." + inputTopicName + ".txt", true /* append */);
+            fileWriter = new FileWriter(OUTPUT_DIRECTORY + localDateTime + "." + inputTopicName + ".ttl", true /* append */);
             bufferedWriter = new BufferedWriter(fileWriter);
             bufferedWriter.write(inputMessageText);
             bufferedWriter.close();
