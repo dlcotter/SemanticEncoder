@@ -50,13 +50,13 @@ public abstract class ActiveMQEnabled implements ILoggable {
         }
 
         // Initialize prefix hash
-        prefixes.put("RDF"   ,"http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-        prefixes.put("RDFS"  ,"http://www.w3.org/2000/01/rdf-schema#");
-        prefixes.put("OWL"   ,"http://www.w3.org/2002/07/owl#");
-        prefixes.put("XSD"   ,"http://www.w3.org/2001/XMLSchema#");
-        prefixes.put("FHIR"  ,"http://hl7.org/fhir#");
-        prefixes.put("LOINC" ,"http://loinc.org/rdf#");
-        prefixes.put("SCT"   ,"http://snomed.info/id#");
+        prefixes.put("rdf"   ,"http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        prefixes.put("rdfs"  ,"http://www.w3.org/2000/01/rdf-schema#");
+        prefixes.put("owl"   ,"http://www.w3.org/2002/07/owl#");
+        prefixes.put("xsd"   ,"http://www.w3.org/2001/XMLSchema#");
+        prefixes.put("fhir"  ,"http://hl7.org/fhir/");
+        prefixes.put("loinc" ,"http://loinc.org/rdf#");
+        prefixes.put("sct"   ,"http://snomed.info/id#");
     }
 
     public void setLogger(Logger logger) {
