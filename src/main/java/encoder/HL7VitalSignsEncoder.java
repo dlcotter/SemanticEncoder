@@ -80,6 +80,10 @@ public class HL7VitalSignsEncoder extends Encoder {
                     PV1 pv1Segment = visitGroup.getPV1();
 
                     Encounter encounter = new Encounter();
+                    encounter.identifier = pv1Segment.getPv119_VisitNumber().getCx1_IDNumber().getValue();
+                    encounter.bed = pv1Segment.getPv13_AssignedPatientLocation().getPl3_Bed().getValue();
+                    encounter.floor = pv1Segment.getPv13_AssignedPatientLocation().getPl8_Floor().getValue();
+                    encounter.building = pv1Segment.getPv13_AssignedPatientLocation().getPl7_Building().getValue();
                     models.add(encodeEncounter(encounter));
                     // VISIT ]
                 }
