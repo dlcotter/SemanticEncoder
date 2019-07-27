@@ -12,9 +12,7 @@ import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
 import ca.uhn.hl7v2.model.v25.segment.PID;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
-import domain.Patient;
-import domain.VitalSign;
-import domain.VitalSignSet;
+import domain.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -111,7 +109,9 @@ public class HL7VitalSignsInput extends Input {
         ORU_R01_PATIENT_RESULT patientResultGroup = message.getPATIENT_RESULT();
         ORU_R01_PATIENT patientGroup = patientResultGroup.getPATIENT();
 
-        Patient patient = Patient.getSamplePatients().get(new Random().nextInt(10));
+        int patientIndex = new Random().nextInt(10);
+        Patient patient = Patient.getSamplePatients().get(patientIndex);
+        Encounter encounter = Encounter.getSampleEncounters().get(patientIndex);
 
         PID pidSegment = patientGroup.getPID();
         pidSegment.getPid1_SetIDPID().setValue(patient.identifier);
@@ -123,9 +123,10 @@ public class HL7VitalSignsInput extends Input {
 
         ORU_R01_VISIT visitGroup = patientGroup.getVISIT();
         PV1 pv1Segment = visitGroup.getPV1();
-        pv1Segment.getPv13_AssignedPatientLocation().getPl3_Bed().setValue("121A");
-        pv1Segment.getPv13_AssignedPatientLocation().getPl7_Building().setValue("A. B. Chandler");
-        pv1Segment.getPv13_AssignedPatientLocation().getPl8_Floor().setValue("8");
+        pv1Segment.getPv119_VisitNumber().getCx1_IDNumber().setValue(encounter.identifier);
+        pv1Segment.getPv13_AssignedPatientLocation().getPl3_Bed().setValue(Utils.randomNumericIdentifier(2) + "-" + Utils.randomAlphaIdentifier(1));
+        pv1Segment.getPv13_AssignedPatientLocation().getPl7_Building().setValue(new String[] { "PavA", "Chandler", "GoodSamaritan" }[new Random().nextInt(3)]);
+        pv1Segment.getPv13_AssignedPatientLocation().getPl8_Floor().setValue(Utils.randomNumericIdentifier(1));
 
         /*
          * The OBR segment is contained within a group called ORDER_OBSERVATION,
@@ -136,7 +137,7 @@ public class HL7VitalSignsInput extends Input {
 
         // Populate the OBR
         OBR obrSegment = orderObservationGroup.getOBR();
-        obrSegment.getObr1_SetIDOBR().setValue(this.randomAlpha(10));
+        obrSegment.getObr1_SetIDOBR().setValue(Utils.randomAlphaIdentifier(10));
         obrSegment.getObr4_UniversalServiceIdentifier().getCe1_Identifier().setValue("28562-7");
         obrSegment.getObr4_UniversalServiceIdentifier().getCe2_Text().setValue("Vital Signs");
         obrSegment.getObr4_UniversalServiceIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
@@ -174,16 +175,5 @@ public class HL7VitalSignsInput extends Input {
         codedElement2.getText().setValue("mm[Hg]");
         codedElement2.getNameOfCodingSystem().setValue("UOM"); // http://unitsofmeasure.org
         obxSegment2.getObx5_ObservationValue(0).setData(codedElement2);
-    }
-
-    private static final String ALPHA_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static String randomAlpha(int count) {
-        StringBuilder builder = new StringBuilder();
-        while (count-- != 0) {
-            int character = (int)(Math.random()* ALPHA_STRING.length());
-            builder.append(ALPHA_STRING.charAt(character));
-        }
-        return builder.toString();
     }
 }
