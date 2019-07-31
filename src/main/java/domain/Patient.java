@@ -10,16 +10,16 @@ public class Patient {
         List<Patient> samplePatients = new ArrayList<>();
 
         // Initialize sample patients list (the cast of NYPD Blue, all in the hospital at once, sadly)
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Franz, Dennis"        ;birthDate = "10/28/1944" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Clapp, Gordon"        ;birthDate = "09/24/1948" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "McDaniel, James"      ;birthDate = "03/25/1958" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Brochtrup, Bill"      ;birthDate = "03/07/1963" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Turturro, Nicholas"   ;birthDate = "01/29/1962" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Delaney, Kim"         ;birthDate = "11/29/1961" ;gender = "female" ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Simmons, Henry"       ;birthDate = "07/01/1970" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Lawrence, Sharon"     ;birthDate = "06/29/1961" ;gender = "female" ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Smits, Jimmy"         ;birthDate = "07/09/1955" ;gender = "male"   ;}});
-        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Gosselaar, Mark-Paul" ;birthDate = "03/01/1974" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Franz, Dennis"        ;birthDate = "1944-10-28T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Clapp, Gordon"        ;birthDate = "1948-09-24T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "McDaniel, James"      ;birthDate = "1958-03-25T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Brochtrup, Bill"      ;birthDate = "1963-03-07T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Turturro, Nicholas"   ;birthDate = "1962-01-29T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Delaney, Kim"         ;birthDate = "1961-11-29T00:00:00" ;gender = "female" ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Simmons, Henry"       ;birthDate = "1970-07-01T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Lawrence, Sharon"     ;birthDate = "1961-06-29T00:00:00" ;gender = "female" ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Smits, Jimmy"         ;birthDate = "1955-07-09T00:00:00" ;gender = "male"   ;}});
+        samplePatients.add(new Patient() {{ identifier = Utils.randomNumericIdentifier(9); name = "Gosselaar, Mark-Paul" ;birthDate = "1974-03-01T00:00:00" ;gender = "male"   ;}});
 
         return samplePatients;
     }

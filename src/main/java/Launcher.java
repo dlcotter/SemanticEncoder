@@ -1,8 +1,10 @@
 import applications.EsperListener;
 import common.ActiveMQEnabled;
 import encoder.HL7VitalSignsEncoder;
+import input.FHIREncounterInput;
 import input.HL7VitalSignsInput;
 import input.Input;
+import input.PipeDelimitedPatientsInput;
 import logging.CSVLogger;
 import logging.Logger;
 import output.FileOutput;
@@ -25,15 +27,30 @@ public class Launcher {
     public static void main(String[] args) {
         List<ActiveMQEnabled> components = new ArrayList<>();
 
-        int option = 0;
+        int option = 1;
         String mode = "common";
 
         switch (option) {
+            // INPUT TESTS
             case 0:
+                components = testPipeDelimitedPatientInput();
+                mode = "testPipeDelimitedPatientInput";
+                break;
+            case 1:
+                components = testFHIREncounterInput();
+                mode = "testFHIREncounterInput";
+                break;
+            case 2:
+                components = testHL7VitalSignsInput();
+                mode = "testHL7VitalSignsInput";
+                break;
+
+            // ENCODER TESTS
+            case 3:
                 components = exportFHIRforValidation();
                 mode = "exportFHIRforValidation";
                 break;
-            case 1:
+            case 4:
                 components = runCEPPipeline();
                 mode = "runCEPPipeline";
                 break;
@@ -53,9 +70,33 @@ public class Launcher {
                 ((Input)component).start();
     }
 
+    private static List<ActiveMQEnabled> testPipeDelimitedPatientInput() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.PIPE_DELIMITED"));
+        components.add(new FileOutput("INPUT.PATIENTS.PIPE_DELIMITED"));
+
+        return components;
+    }
+
+    private static List<ActiveMQEnabled> testFHIREncounterInput() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new FHIREncounterInput("INPUT.ENCOUNTERS.FHIR"));
+        components.add(new FileOutput("INPUT.ENCOUNTERS.FHIR"));
+
+        return components;
+    }
+
+    private static List<ActiveMQEnabled> testHL7VitalSignsInput() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.NORMAL, "INPUT.OBSERVATIONS.HL7"));
+        components.add(new FileOutput("INPUT.OBSERVATIONS.HL7"));
+
+        return components;
+    }
+
     private static List<ActiveMQEnabled> exportFHIRforValidation() {
         List<ActiveMQEnabled> components = new ArrayList<>();
-        HL7VitalSignsInput hl7VitalSignsInput = new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.NORMAL);
+        HL7VitalSignsInput hl7VitalSignsInput = new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.NORMAL, "INPUT.VITALS.HL7");
         hl7VitalSignsInput.setRepeat(false);
         components.add(hl7VitalSignsInput);
         components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","OUTPUT.FILE"));
@@ -66,7 +107,7 @@ public class Launcher {
 
     private static List<ActiveMQEnabled> runCEPPipeline() {
         List<ActiveMQEnabled> components = new ArrayList<>();
-        components.add(new HL7VitalSignsInput("INPUT.VITALS.HL7", HL7VitalSignsInput.SimulationMode.HYPOTENSION));
+        components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.HYPOTENSION, "INPUT.VITALS.HL7"));
         components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","STORE.TDB"));
         components.add(new TDBStore("STORE.TDB","QUERY"));
         components.add(new HighBloodPressureQuery("QUERY","QUERY.HIGH_BP"));

@@ -25,7 +25,7 @@ public class HL7VitalSignsInput extends Input {
 
     SimulationMode simulationMode;
 
-    public HL7VitalSignsInput(String outputTopicName, SimulationMode simulationMode) {
+    public HL7VitalSignsInput(SimulationMode simulationMode, String outputTopicName) {
         super(outputTopicName);
         this.simulationMode = simulationMode;
     }
@@ -111,7 +111,7 @@ public class HL7VitalSignsInput extends Input {
 
         int patientIndex = new Random().nextInt(10);
         Patient patient = Patient.getSamplePatients().get(patientIndex);
-        Encounter encounter = Encounter.getSampleEncounters().get(patientIndex);
+        Encounter encounter = Encounter.getSampleEncounters().get(patientIndex); // uses same index as patient because encounter n belongs to patient n
 
         PID pidSegment = patientGroup.getPID();
         pidSegment.getPid1_SetIDPID().setValue(patient.identifier);
