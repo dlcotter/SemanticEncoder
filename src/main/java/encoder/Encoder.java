@@ -5,6 +5,7 @@ import common.ActiveMQEnabled;
 import domain.Encounter;
 import domain.Observation;
 import domain.Patient;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -43,39 +44,55 @@ public abstract class Encoder extends ActiveMQEnabled {
         Model model = this.getEncoderModel();
 
         Resource root = model.getResource(model.expandPrefix("fhir:Patient/" + patient.identifier));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:nodeRole")),"fhir:treeRoot");
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:Resource.id")), patient.identifier);
-        root.addProperty(model.createProperty(model.expandPrefix("rdf:type")), model.expandPrefix("fhir:Patient"));
+
+        root.addProperty(
+            model.createProperty(model.expandPrefix("rdf:type")),
+            model.createResource(model.expandPrefix("fhir:Patient")));
+
+        root.addProperty(
+            model.createProperty(model.expandPrefix("fhir:nodeRole")),
+            model.createResource(model.expandPrefix("fhir:treeRoot")));
+
+        root.addProperty(
+            model.createProperty(model.expandPrefix("fhir:Resource.id")),
+            model.createResource()
+                .addProperty(
+                    model.createProperty(model.expandPrefix("fhir:value")),
+                    patient.identifier));
 
         root.addProperty(
             model.createProperty(model.expandPrefix("fhir:Patient.identifier")),
             model.createResource()
-                    .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0")
-                    .addProperty(
-                            model.createProperty(model.expandPrefix("fhir:Identifier.value")),
-                            model.createResource()
-                                    .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0")
-                                        .addProperty(model.createProperty(model.expandPrefix("fhir:value")), patient.identifier)));
+                .addProperty(
+                    model.createProperty(model.expandPrefix("fhir:Identifier.value")),
+                    model.createResource()
+                        .addProperty(
+                            model.createProperty(model.expandPrefix("fhir:value")),
+                            patient.identifier)));
 
         root.addProperty(
             model.createProperty(model.expandPrefix("fhir:Patient.name")),
             model.createResource()
-                    .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0")
-                    .addProperty(
-                            model.createProperty(model.expandPrefix("fhir:HumanName.given")),
-                            model.createResource()
-                                    .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0")
-                                    .addProperty(model.createProperty(model.expandPrefix("fhir:value")), patient.name)));
+                .addProperty(
+                    model.createProperty(model.expandPrefix("fhir:HumanName.given")),
+                    model.createResource()
+                        .addProperty(
+                            model.createProperty(model.expandPrefix("fhir:value")),
+                            patient.name)));
 
         root.addProperty(
             model.createProperty(model.expandPrefix("fhir:Patient.birthDate")),
             model.createResource()
-                    .addProperty(model.createProperty(model.expandPrefix("fhir:value")), "\"" + patient.birthDate + "\"^^xsd:date"));
+                .addProperty(
+                    model.createProperty(model.expandPrefix("fhir:value")),
+                    model.createTypedLiteral(patient.birthDate, XSDDatatype.XSDdateTime)));
 
         root.addProperty(
             model.createProperty(model.expandPrefix("fhir:Patient.gender")),
             model.createResource()
-                    .addProperty(model.createProperty(model.expandPrefix("fhir:value")), patient.gender));
+                .addProperty(
+                    model.createProperty(model.expandPrefix("fhir:value")),
+                    patient.gender));
 
         return model;
     }
@@ -84,8 +101,8 @@ public abstract class Encoder extends ActiveMQEnabled {
         Model model = this.getEncoderModel();
 
         Resource root = model.getResource(model.expandPrefix("fhir:Encounter"));
-        root.addProperty(model.createProperty(model.expandPrefix("rdf:type")),model.expandPrefix("fhir:Encounter"));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:nodeRole")),model.expandPrefix("fhir:treeRoot"));
+        root.addProperty(model.createProperty(model.expandPrefix("rdf:type")), model.expandPrefix("fhir:Encounter"));
+        root.addProperty(model.createProperty(model.expandPrefix("fhir:nodeRole")), model.expandPrefix("fhir:treeRoot"));
         root.addProperty(model.createProperty(model.expandPrefix("fhir:Resource.id")), encounter.identifier);
         root.addProperty(
                 model.createProperty(model.expandPrefix("fhir:Encounter.location")),
