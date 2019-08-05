@@ -84,6 +84,7 @@ public class HL7VitalSignsEncoder extends Encoder {
                     encounter.bed = pv1Segment.getPv13_AssignedPatientLocation().getPl3_Bed().getValue();
                     encounter.floor = pv1Segment.getPv13_AssignedPatientLocation().getPl8_Floor().getValue();
                     encounter.building = pv1Segment.getPv13_AssignedPatientLocation().getPl7_Building().getValue();
+                    encounter.patientIdentifier = patient.identifier;
                     models.add(encodeEncounter(encounter));
                     // VISIT ]
                 }
@@ -95,9 +96,11 @@ public class HL7VitalSignsEncoder extends Encoder {
                 OBR obr = orderObservationGroup.getOBR();
 
                 Observation observation = new Observation();
-                observation.observationID = obr.getObr1_SetIDOBR().getValue();
+                observation.identifier = obr.getObr1_SetIDOBR().getValue();
                 observation.observationDateTime =  obr.getObr7_ObservationDateTime().encode();
-
+                if (patientGroup != null && !patientGroup.isEmpty()) {
+                    observation.patientIdentifier = patientGroup.getPID().getPid3_PatientIdentifierList(0).getCx1_IDNumber().toString();
+                }
                 observation.code = new CodedElement();
                 observation.code.observationIdentifier = obr.getObr4_UniversalServiceIdentifier().getCe1_Identifier().getValue();
                 observation.code.displayText = obr.getObr4_UniversalServiceIdentifier().getCe2_Text().getValue();

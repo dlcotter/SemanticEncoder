@@ -140,7 +140,7 @@ public class HL7VitalSignsInput extends Input {
         obrSegment.getObr1_SetIDOBR().setValue(Utils.randomAlphaIdentifier(10));
         obrSegment.getObr4_UniversalServiceIdentifier().getCe1_Identifier().setValue("28562-7");
         obrSegment.getObr4_UniversalServiceIdentifier().getCe2_Text().setValue("Vital Signs");
-        obrSegment.getObr4_UniversalServiceIdentifier().getCe3_NameOfCodingSystem().setValue("LN");
+        obrSegment.getObr4_UniversalServiceIdentifier().getCe3_NameOfCodingSystem().setValue("http://loinc.org");
         String localDateTime = DateTimeFormatter.ofPattern("yyyyMMddhhmmss", Locale.ENGLISH).format(LocalDateTime.now());
         obrSegment.getObr7_ObservationDateTime().getTs1_Time().setValue(localDateTime);
 

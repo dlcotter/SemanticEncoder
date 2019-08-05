@@ -1,6 +1,9 @@
 import applications.EsperListener;
 import common.ActiveMQEnabled;
+import domain.Utils;
+import encoder.FHIREncounterEncoder;
 import encoder.HL7VitalSignsEncoder;
+import encoder.PipeDelimitedPatientsEncoder;
 import input.FHIREncounterInput;
 import input.HL7VitalSignsInput;
 import input.Input;
@@ -9,6 +12,7 @@ import logging.CSVLogger;
 import logging.Logger;
 import output.FileOutput;
 import query.HighBloodPressureQuery;
+import query.PassThroughQuery;
 import store.TDBStore;
 
 import java.time.LocalDateTime;
@@ -27,7 +31,7 @@ public class Launcher {
     public static void main(String[] args) {
         List<ActiveMQEnabled> components = new ArrayList<>();
 
-        int option = 1;
+        int option = 8;
         String mode = "common";
 
         switch (option) {
@@ -36,10 +40,12 @@ public class Launcher {
                 components = testPipeDelimitedPatientInput();
                 mode = "testPipeDelimitedPatientInput";
                 break;
+
             case 1:
                 components = testFHIREncounterInput();
                 mode = "testFHIREncounterInput";
                 break;
+
             case 2:
                 components = testHL7VitalSignsInput();
                 mode = "testHL7VitalSignsInput";
@@ -47,19 +53,39 @@ public class Launcher {
 
             // ENCODER TESTS
             case 3:
-                components = exportFHIRforValidation();
-                mode = "exportFHIRforValidation";
+                components = testPipeDelimitedPatientEncoder();
+                mode = "testHL7VitalSignsInput";
                 break;
+
             case 4:
-                components = runCEPPipeline();
-                mode = "runCEPPipeline";
+                components = testFHIREncounterEncoder();
+                mode = "testFHIREncounterEncoder";
+                break;
+
+            case 5:
+                components = testHL7VitalSignsEncoder();
+                mode = "testHL7VitalSignsEncoder";
+                break;
+
+            case 6:
+                components = testTDBStore();
+                mode = "testTDBStore";
+                break;
+
+            case 7:
+                components = testPassthroughQuery();
+                mode = "testPassthroughQuery";
+                break;
+
+            case 8:
+                components = testHighBloodPressureQuery();
+                mode = "testHighBloodPressureQuery";
                 break;
         }
 
         // Attach loggers - passing the same logger w/same file handler to each component so that they log to a single file
         System.setProperty("java.util.logging.SimpleFormatter.format", LOG_LINE_FORMAT);
-        String localDateTime = DateTimeFormatter.ofPattern("yyyyMMddhhmmss", Locale.ENGLISH).format(LocalDateTime.now());
-        Logger commonLogger = new CSVLogger("CommonLogger", LOG_DIRECTORY + localDateTime + "." + mode  + ".log");
+        Logger commonLogger = new CSVLogger("CommonLogger", LOG_DIRECTORY + Utils.now("yyyyMMddhhmmss") + "." + mode  + ".log");
         commonLogger.info("TIME|CLASS|EVENT|INPUT_TOPIC|OUTPUT_TOPIC|MSG_HASH|THREAD");
         for (ActiveMQEnabled component : components)
             component.setLogger(commonLogger);
@@ -70,6 +96,7 @@ public class Launcher {
                 ((Input)component).start();
     }
 
+    // INPUT TESTS
     private static List<ActiveMQEnabled> testPipeDelimitedPatientInput() {
         List<ActiveMQEnabled> components = new ArrayList<>();
         components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.PIPE_DELIMITED"));
@@ -94,17 +121,70 @@ public class Launcher {
         return components;
     }
 
-    private static List<ActiveMQEnabled> exportFHIRforValidation() {
+    // ENCODER TESTS
+    private static List<ActiveMQEnabled> testPipeDelimitedPatientEncoder() {
         List<ActiveMQEnabled> components = new ArrayList<>();
-        HL7VitalSignsInput hl7VitalSignsInput = new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.NORMAL, "INPUT.VITALS.HL7");
-        hl7VitalSignsInput.setRepeat(false);
-        components.add(hl7VitalSignsInput);
-        components.add(new HL7VitalSignsEncoder("INPUT.VITALS.HL7","OUTPUT.FILE"));
-        components.add(new FileOutput("OUTPUT.FILE"));
+        components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.PIPE_DELIMITED"));
+        components.add(new PipeDelimitedPatientsEncoder("INPUT.PATIENTS.PIPE_DELIMITED","ENCODED.PATIENTS"));
+        components.add(new FileOutput("ENCODED.PATIENTS"));
 
         return components;
     }
 
+    private static List<ActiveMQEnabled> testFHIREncounterEncoder() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new FHIREncounterInput("INPUT.ENCOUNTERS.FHIR"));
+        components.add(new FHIREncounterEncoder("INPUT.ENCOUNTERS.FHIR","ENCODED.ENCOUNTERS"));
+        components.add(new FileOutput("ENCODED.ENCOUNTERS"));
+
+        return components;
+    }
+
+    private static List<ActiveMQEnabled> testHL7VitalSignsEncoder() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.NORMAL, "INPUT.OBSERVATIONS.HL7"));
+        components.add(new HL7VitalSignsEncoder("INPUT.OBSERVATIONS.HL7","ENCODED.VITALS"));
+        components.add(new FileOutput("ENCODED.VITALS"));
+
+        return components;
+    }
+
+    // STORE/QUERY TESTS
+    private static List<ActiveMQEnabled> testTDBStore() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.NORMAL, "INPUT.OBSERVATIONS.HL7"));
+        components.add(new HL7VitalSignsEncoder("INPUT.OBSERVATIONS.HL7","ENCODED.VITALS"));
+        components.add(new TDBStore("ENCODED.VITALS", "QUERY"));
+        components.add(new FileOutput("QUERY"));
+
+        return components;
+    }
+
+    private static List<ActiveMQEnabled> testPassthroughQuery() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        // The patients list, which is only ten elements, makes for a better test data set than, say, observations
+        // which continually grows and thus overwhelms the capacity of the "return all" query to handle its volume.
+        components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.PIPE_DELIMITED"));
+        components.add(new PipeDelimitedPatientsEncoder("INPUT.PATIENTS.PIPE_DELIMITED","ENCODED.PATIENTS"));
+        components.add(new TDBStore("ENCODED.PATIENTS", "QUERY"));
+        components.add(new PassThroughQuery("QUERY", "RESULTS.ALL"));
+        components.add(new FileOutput("RESULTS.ALL"));
+
+        return components;
+    }
+
+    private static List<ActiveMQEnabled> testHighBloodPressureQuery() {
+        List<ActiveMQEnabled> components = new ArrayList<>();
+        components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.HYPOTENSION, "INPUT.OBSERVATIONS.HL7"));
+        components.add(new HL7VitalSignsEncoder("INPUT.OBSERVATIONS.HL7","ENCODED.VITALS"));
+        components.add(new TDBStore("ENCODED.VITALS", "QUERY"));
+        components.add(new HighBloodPressureQuery("QUERY", "RESULTS.HIGH_BP"));
+        components.add(new FileOutput("RESULTS.HIGH_BP"));
+
+        return components;
+    }
+
+    // FULL PIPELINE TESTS
     private static List<ActiveMQEnabled> runCEPPipeline() {
         List<ActiveMQEnabled> components = new ArrayList<>();
         components.add(new HL7VitalSignsInput(HL7VitalSignsInput.SimulationMode.HYPOTENSION, "INPUT.VITALS.HL7"));
@@ -116,14 +196,3 @@ public class Launcher {
         return components;
     }
 }
-
-//        components.add(new PipeDelimitedPatientsInput("INPUT.PATIENTS.CSV"));
-//        components.add(new FHIREncounterInput("INPUT.ENCOUNTERS.FHIR")); // Use  HAPITester class in the examples package to download FHIR messages from the test server and post them to the message queue.
-//         idea: pick the simulation randomly (or based on CLI args) and detect via CEP app
-//        components.add(new PipeDelimitedPatientsEncoder("INPUT.PATIENTS.CSV","STORE.TDB"));
-//        components.add(new FHIREncounterEncoder("INPUT.ENCOUNTERS.FHIR","STORE.TDB"));
-//        components.add(new PassThroughQuery("QUERY","QUERY.PASSTHROUGH"));
-//            components.add(new PatientsByGenderQuery("QUERY","QUERY.PATIENTS_BY_GENDER"));
-// OMOP application
-/* OUTPUTS - still needed??? seems duplicate of logging functionality */
-//        components.add(new ScreenOutput("OUTPUTS.HIGH_BP"));

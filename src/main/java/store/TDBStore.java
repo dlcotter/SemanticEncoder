@@ -19,7 +19,13 @@ public class TDBStore extends Store {
 
     @Override
     protected List<String> processInputText(String inputMessageText) {
-        // Open dataset transaction in write mode
+        // Overview: The TDB store writes the incoming FHIR/RDF messages to a database, which is subsequently
+        // queried by a query module. This would seem to render it unnecessary to send output messages to a
+        // message queue, but right now the receipt of those output messages is the trigger for the query to
+        // poll the database. A future improvement might be to have the query module poll the database on its
+        // own schedule, rather than waiting for an event to trigger it.
+
+        // Open data set transaction in write mode
         dataset.begin(ReadWrite.WRITE);
 
         try {

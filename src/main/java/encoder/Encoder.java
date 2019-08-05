@@ -5,6 +5,7 @@ import common.ActiveMQEnabled;
 import domain.Encounter;
 import domain.Observation;
 import domain.Patient;
+import domain.Utils;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -100,19 +101,32 @@ public abstract class Encoder extends ActiveMQEnabled {
     Model encodeEncounter(@NotNull Encounter encounter) {
         Model model = this.getEncoderModel();
 
-        Resource root = model.getResource(model.expandPrefix("fhir:Encounter"));
-        root.addProperty(model.createProperty(model.expandPrefix("rdf:type")), model.expandPrefix("fhir:Encounter"));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:nodeRole")), model.expandPrefix("fhir:treeRoot"));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:Resource.id")), encounter.identifier);
+        Resource root = model.getResource(model.expandPrefix("fhir:Encounter/" + encounter.identifier));
+
         root.addProperty(
-                model.createProperty(model.expandPrefix("fhir:Encounter.location")),
+                model.createProperty(model.expandPrefix("rdf:type")),
+                model.createResource(model.expandPrefix("fhir:Encounter")));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:nodeRole")),
+                model.createResource(model.expandPrefix("fhir:treeRoot")));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Resource.id")),
                 model.createResource()
-                        .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0") //change to i
-                        .addProperty(
-                                model.createProperty(model.expandPrefix("fhir:location.location")),
-                                model.createResource()
-                                    .addProperty(model.createProperty(model.expandPrefix("fhir:Reference.reference")), encounter.building + "-" + encounter.floor + encounter.bed)
-                                    .addProperty(model.createProperty(model.expandPrefix("fhir:Reference.display")), encounter.building + "-" + encounter.floor + encounter.bed)));
+                    .addProperty(
+                            model.createProperty(model.expandPrefix("fhir:value")),
+                            encounter.identifier));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Encounter.subject")),
+                model.createResource()
+                    .addProperty(
+                        model.createProperty(model.expandPrefix("fhir:Reference.reference")),
+                        model.createResource()
+                            .addProperty(
+                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                    encounter.patientIdentifier)));
 
         return model;
     }
@@ -120,19 +134,46 @@ public abstract class Encoder extends ActiveMQEnabled {
     Model encodeObservation(@NotNull Observation observation) {
         Model model = this.getEncoderModel();
 
-        Resource root = model.getResource(model.expandPrefix("fhir:Observation/" + observation.observationID));
-
-        root.addProperty(model.createProperty(model.expandPrefix("rdf:type")), model.expandPrefix("fhir:Observation"));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:nodeRole")), model.expandPrefix("fhir:treeRoot"));
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:Resource.id")), observation.observationID);
+        Resource root = model.getResource(model.expandPrefix("fhir:Observation/" + observation.identifier));
 
         root.addProperty(
-                model.createProperty(model.expandPrefix("fhir:Resource.meta")),
-                model.createResource()
-                        .addProperty(model.createProperty(model.expandPrefix("fhir:Meta.versionId")), "1")
-                        .addProperty(model.createProperty(model.expandPrefix("fhir:Meta.lastUpdated")), observation.observationDateTime));
+                model.createProperty(model.expandPrefix("rdf:type")),
+                model.createResource(model.expandPrefix("fhir:Observation")));
 
-        root.addProperty(model.createProperty(model.expandPrefix("fhir:Observation.status")), "final"); // shouldn't be hardcoded
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:nodeRole")),
+                model.createResource(model.expandPrefix("fhir:treeRoot")));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Resource.id")),
+                model.createResource()
+                        .addProperty(
+                                model.createProperty(model.expandPrefix("fhir:value")),
+                                observation.identifier));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Observation.effectiveDateTime")),
+                model.createResource()
+                        .addProperty(
+                                model.createProperty(model.expandPrefix("fhir:value")),
+                                model.createTypedLiteral(Utils.now("yyyyMMddHHmmssSSS"), XSDDatatype.XSDdateTime)));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Observation.subject")),
+                model.createResource()
+                        .addProperty(
+                                model.createProperty(model.expandPrefix("fhir:Reference.reference")),
+                                model.createResource()
+                                        .addProperty(
+                                                model.createProperty(model.expandPrefix("fhir:value")),
+                                                observation.patientIdentifier)));
+
+        root.addProperty(
+                model.createProperty(model.expandPrefix("fhir:Observation.status")),
+                model.createResource()
+                        .addProperty(
+                                model.createProperty(model.expandPrefix("fhir:value")),
+                                "final"));
 
         root.addProperty(
                 model.createProperty(model.expandPrefix("fhir:Observation.code")),
@@ -140,10 +181,24 @@ public abstract class Encoder extends ActiveMQEnabled {
                         .addProperty(
                                 model.createProperty(model.expandPrefix("fhir:CodeableConcept.coding")),
                                 model.createResource()
-                                        .addProperty(model.createProperty(model.expandPrefix("fhir:index")), "0") //change to i
-                                        .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.system")), observation.code.nameOfCodingSystem == null ? "" : observation.code.nameOfCodingSystem)
-                                        .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.code")), observation.code.observationIdentifier == null ? "" : observation.code.observationIdentifier)
-                                        .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.display")), observation.code.displayText == null ? "" : observation.code.displayText)));
+                                        .addProperty(
+                                                model.createProperty(model.expandPrefix("fhir:Coding.system")),
+                                                model.createResource()
+                                                        .addProperty(
+                                                                model.createProperty(model.expandPrefix("fhir:value")),
+                                                                observation.code.nameOfCodingSystem == null ? "" : observation.code.nameOfCodingSystem))
+                                        .addProperty(
+                                                model.createProperty(model.expandPrefix("fhir:Coding.code")),
+                                                model.createResource()
+                                                        .addProperty(
+                                                                model.createProperty(model.expandPrefix("fhir:value")),
+                                                                observation.code.observationIdentifier == null ? "" : observation.code.observationIdentifier))
+                                        .addProperty(
+                                                model.createProperty(model.expandPrefix("fhir:Coding.display")),
+                                                model.createResource()
+                                                        .addProperty(
+                                                                model.createProperty(model.expandPrefix("fhir:value")),
+                                                                observation.code.displayText == null ? "" : observation.code.displayText))));
 
         for (int i = 0; i < observation.components.length; i++) {
             root.addProperty(
@@ -152,18 +207,52 @@ public abstract class Encoder extends ActiveMQEnabled {
                             .addProperty(
                                     model.createProperty(model.expandPrefix("fhir:CodeableConcept.coding")),
                                     model.createResource()
-                                            .addProperty(model.createProperty(model.expandPrefix("fhir:index")), ((Integer) i).toString())
-                                            .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.system")), observation.components[i].nameOfCodingSystem == null ? "" : observation.components[i].nameOfCodingSystem)
-                                            .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.code")), observation.components[i].observationIdentifier == null ? "" : observation.components[i].observationIdentifier)
-                                            .addProperty(model.createProperty(model.expandPrefix("fhir:Coding.display")), observation.components[i].displayText == null ? "" : observation.components[i].displayText)));
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:index")),
+                                                    ((Integer) i).toString())
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:Coding.system")),
+                                                    model.createResource()
+                                                            .addProperty(
+                                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                                    observation.components[i].nameOfCodingSystem == null ? "" : observation.components[i].nameOfCodingSystem))
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:Coding.code")),
+                                                    model.createResource()
+                                                            .addProperty(
+                                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                                    observation.components[i].observationIdentifier == null ? "" : observation.components[i].observationIdentifier))
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:Coding.display")),
+                                                    model.createResource()
+                                                            .addProperty(
+                                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                                    observation.components[i].displayText == null ? "" : observation.components[i].displayText))));
 
             root.addProperty(
                     model.createProperty(model.expandPrefix("fhir:Observation.component.valueQuantity")),
                     model.createResource()
-                            .addProperty(model.createProperty(model.expandPrefix("fhir:index")), ((Integer) i).toString())
-                            .addProperty(model.createProperty(model.expandPrefix("fhir:Quantity.value")), observation.quantities[i].value)
-                            .addProperty(model.createProperty(model.expandPrefix("fhir:Quantity.unit")), observation.quantities[i].unit)
-                            .addProperty(model.createProperty(model.expandPrefix("fhir:Quantity.system")), observation.quantities[i].system));
+                            .addProperty(
+                                    model.createProperty(model.expandPrefix("fhir:index")),
+                                    ((Integer) i).toString())
+                            .addProperty(
+                                    model.createProperty(model.expandPrefix("fhir:Quantity.value")),
+                                    model.createResource()
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                    observation.quantities[i].value))
+                            .addProperty(
+                                    model.createProperty(model.expandPrefix("fhir:Quantity.unit")),
+                                    model.createResource()
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                    observation.quantities[i].unit))
+                            .addProperty(
+                                    model.createProperty(model.expandPrefix("fhir:Quantity.system")),
+                                    model.createResource()
+                                            .addProperty(
+                                                    model.createProperty(model.expandPrefix("fhir:value")),
+                                                    observation.quantities[i].system)));
         }
 
         return model;

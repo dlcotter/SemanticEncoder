@@ -1,8 +1,16 @@
 package domain;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 public class Utils {
     private static final String ALPHA_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String NUMERIC_STRING = "0123456789";
+
+    public static String now(String pattern) {
+        return DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).format(LocalDateTime.now());
+    }
 
     public static String randomAlphaIdentifier(int count) {
         StringBuilder builder = new StringBuilder();

@@ -1,7 +1,9 @@
 package input;
 
 import ca.uhn.fhir.context.FhirContext;
+import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.Encounter;
+import org.hl7.fhir.dstu3.model.Reference;
 
 import java.util.Date;
 import java.util.List;
@@ -20,7 +22,6 @@ public class FHIREncounterInput extends Input {
         // Iterate through list, i.e. repeat, until list is exhausted
         this.setRepeat(true);
     }
-
 
     @Override
     public String getNextMessage() {
@@ -47,28 +48,11 @@ public class FHIREncounterInput extends Input {
                     .setSystem("FDS-EncounterId")
                     .setValue(encounter.identifier);
         encounterResource.setStatus(Encounter.EncounterStatus.INPROGRESS);
-        encounterResource.addType()
-                    .setText("Encounter for problem (procedure)")
-                    .addCoding()
-                        .setSystem("http://snomed.info/sct")
-                        .setCode("185347001")
-                        .setDisplay("Encounter for problem (procedure)");
-        encounterResource.getSubject()
-                    .setReference("Patient/" + encounter.patientIdentifier)
-                    .setDisplay("Sample Test");
-        encounterResource.addParticipant()
-                    .getIndividual()
-                        .setReference("Practitioner/1961850")
-                        .setDisplay("Amanda Applegate");
+        encounterResource.setClass_(new Coding("http://terminology.hl7.org/CodeSystem/v3-ActCode", "IMP", "inpatient encounter"));
         encounterResource.getPeriod()
                     .setStart(new Date())
                     .setEnd(new Date());
-        encounterResource.addReason()
-                .setText("Medication education (procedure)")
-                .addCoding()
-                    .setSystem("http://snomed.info/sct")
-                    .setCode("967006")
-                    .setDisplay("Medication education (procedure)");
+        encounterResource.setSubject(new Reference("Patient/" + encounter.patientIdentifier));
 
         // Serialize the message
         FhirContext ctx = FhirContext.forDstu3();

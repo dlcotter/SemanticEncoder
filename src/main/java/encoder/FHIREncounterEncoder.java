@@ -15,18 +15,19 @@ public class FHIREncounterEncoder extends Encoder {
 
     @Override
     public List<Model> buildModel(String message) {
+        ArrayList<Model> models = new ArrayList<>();
         FhirContext ctx = FhirContext.forDstu3();
         IBaseResource resource = ctx.newXmlParser().parseResource(message);
 
         if (!(resource instanceof Encounter))
-            return new ArrayList<>();
+            return models;
 
-        ArrayList<Model> models = new ArrayList<>();
+        Encounter encounterResource = (Encounter) resource;
+        domain.Encounter encounter = new domain.Encounter();
+        encounter.identifier = encounterResource.getIdentifier().get(0).getValue();
+        encounter.patientIdentifier = encounterResource.getSubject().getReference();
 
-        Encounter FHIREncounter = (Encounter) resource;
-        domain.Encounter commonEncounter = new domain.Encounter();
-        commonEncounter.identifier = FHIREncounter.getIdentifier().get(0).getValue();
-        models.add(encodeEncounter(commonEncounter));
+        models.add(encodeEncounter(encounter));
 
         return models;
     }
