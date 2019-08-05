@@ -1,7 +1,7 @@
 package domain;
 
 public class Observation {
-    public String observationID, observationDateTime, encounterIdentifier;
+    public String identifier, observationDateTime, patientIdentifier;
     public CodedElement code;
     public CodedElement[] components;
     public Quantity[] quantities;
