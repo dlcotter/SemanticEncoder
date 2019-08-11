@@ -3,14 +3,15 @@ package common;
 import logging.Logger;
 import logging.VoidLogger;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.jetbrains.annotations.NotNull;
 
 import javax.jms.*;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public abstract class ActiveMQEnabled implements ILoggable {
-    /* FIELDS */
     private ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
     private Connection connection;
     protected Session session;
@@ -34,13 +35,13 @@ public abstract class ActiveMQEnabled implements ILoggable {
             connection.start();
             session = connection.createSession(false /* ? */, Session.AUTO_ACKNOWLEDGE);
 
-            if (inputTopicName != null) {
+            if (!(inputTopicName == null || inputTopicName.isEmpty())) {
                 inputDestination = session.createTopic(inputTopicName);
                 consumer = session.createConsumer(inputDestination);
                 consumer.setMessageListener(incomingMessageHandler);
             }
 
-            if (outputTopicName != null) {
+            if (!(outputTopicName == null || outputTopicName.isEmpty())) {
                 outputDestination = session.createTopic(outputTopicName);
                 producer = session.createProducer(outputDestination);
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -118,27 +119,53 @@ public abstract class ActiveMQEnabled implements ILoggable {
             // Call child method to produce output messages from input
             List<String> outputMessageTexts = processInputText(inputMessageText);
 
-            // Send output message(s)
-            for (String outputMessageText : outputMessageTexts) {
-                if (outputMessageText.isEmpty())
-                    continue;
+            // Die if no output topic
+            if (outputTopicName == null || outputTopicName.isEmpty())
+                return;
 
-                // Build output message
-                TextMessage outputMessage;
-                try {
-                    outputMessage = session.createTextMessage(outputMessageText);
-                    producer.send(outputMessage);
-                    logMessage(outputMessage, "sent");
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                }
+            // Die if producer has not been initialized
+            if (producer == null)
+                return;
+
+            // Send output messages
+            try {
+                sendOutputMessages(outputMessageTexts);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
 
-    protected abstract List<String> processInputText(String inputMessageText); // to be implemented by child classes for use in incomingMessageHandler
+    protected void sendOutputMessages(@NotNull List<String> outputMessageTexts) throws Exception {
+        if (session == null)
+            throw new Exception("Session cannot be null");
 
-    public boolean logDebugInfo() {
+        if (producer == null)
+            throw new Exception("Producer cannot be null");
+
+        // Send output message(s)
+        for (String outputMessageText : outputMessageTexts) {
+            if (outputMessageText.isEmpty())
+                continue;
+
+            // Build output message
+            TextMessage outputMessage;
+            try {
+                outputMessage = session.createTextMessage(outputMessageText);
+                producer.send(outputMessage);
+                logMessage(outputMessage, "sent");
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Default implementation; intended to be overridden by child classes for use in incomingMessageHandler
+    protected List<String> processInputText(String inputMessageText) {
+        return new ArrayList<>();
+    }
+
+    public boolean getLogDebugInfo() {
         return logDebugInfo;
     }
 
@@ -146,7 +173,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
         this.logDebugInfo = logDebugInfo;
     }
 
-    public boolean printDebugInfo() {
+    public boolean getPrintDebugInfo() {
         return printDebugInfo;
     }
 
@@ -154,7 +181,7 @@ public abstract class ActiveMQEnabled implements ILoggable {
         this.printDebugInfo = printDebugInfo;
     }
 
-    public boolean printMessageContents() {
+    public boolean getPrintMessageContents() {
         return printMessageContents;
     }
 

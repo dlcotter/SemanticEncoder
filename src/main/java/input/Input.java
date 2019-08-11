@@ -4,22 +4,18 @@ package input;
 import common.ActiveMQEnabled;
 
 import javax.jms.TextMessage;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public abstract class Input extends ActiveMQEnabled {
-    /* FIELDS */
     private boolean repeat = true;
     private long delay = 1000L, period = 1000L;
 
-    /* CONSTRUCTORS */
+    // Inputs should never have an input topic themselves, so no such constructor is offered:
     Input(String outputTopicName) {
         super(null, outputTopicName);
     }
 
-    /* METHODS */
     public void start() {
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
@@ -49,12 +45,6 @@ public abstract class Input extends ActiveMQEnabled {
     }
 
     abstract String getNextMessage();
-
-    @Override
-    protected List<String> processInputText(String inputMessageText) {
-        // Inputs never catch incoming messages, so they can just return an empty list
-        return new ArrayList<>();
-    }
 
     public void setRepeat(boolean repeat) {
         this.repeat = repeat;
