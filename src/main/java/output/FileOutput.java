@@ -1,18 +1,19 @@
 package output;
 
-import domain.Utils;
+import common.ActiveMQEnabled;
+import common.Utils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.List;
 
-public class FileOutput extends Output {
+public class FileOutput extends ActiveMQEnabled {
+    private static final String OUTPUT_DIRECTORY = "./output/";
     private FileWriter fileWriter;
     private BufferedWriter bufferedWriter;
 
     public FileOutput(String inputTopicName) {
-        super(inputTopicName);
+        super(inputTopicName, null);
     }
 
     @Override
@@ -27,7 +28,6 @@ public class FileOutput extends Output {
             fileWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
         }
 
         return super.processInputText(inputMessageText);
