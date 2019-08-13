@@ -1,4 +1,4 @@
-package domain;
+package common;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,9 +7,20 @@ import java.util.Locale;
 public class Utils {
     private static final String ALPHA_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String NUMERIC_STRING = "0123456789";
+    public static final String XSD_DATETIME_FMT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+
+    public static String now() {
+        return now(null);
+    }
 
     public static String now(String pattern) {
-        return DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).format(LocalDateTime.now());
+        return nSecondsAgo(0, pattern);
+    }
+
+    public static String nSecondsAgo(int n, String pattern) {
+        return DateTimeFormatter
+                .ofPattern(pattern == null ? XSD_DATETIME_FMT : pattern, Locale.ENGLISH)
+                .format(LocalDateTime.now().minusNanos(n * 10^9));
     }
 
     public static String randomAlphaIdentifier(int count) {

@@ -5,7 +5,7 @@ import common.ActiveMQEnabled;
 import domain.Encounter;
 import domain.Observation;
 import domain.Patient;
-import domain.Utils;
+import common.Utils;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -156,7 +156,7 @@ public abstract class Encoder extends ActiveMQEnabled {
                 model.createResource()
                         .addProperty(
                                 model.createProperty(model.expandPrefix("fhir:value")),
-                                model.createTypedLiteral(Utils.now("yyyyMMddHHmmssSSS"), XSDDatatype.XSDdateTime)));
+                                model.createTypedLiteral(Utils.now(Utils.XSD_DATETIME_FMT), XSDDatatype.XSDdateTime)));
 
         root.addProperty(
                 model.createProperty(model.expandPrefix("fhir:Observation.subject")),

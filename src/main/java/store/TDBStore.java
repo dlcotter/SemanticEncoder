@@ -1,5 +1,6 @@
 package store;
 
+import common.ActiveMQEnabled;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
@@ -8,11 +9,10 @@ import org.apache.jena.tdb.TDBFactory;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.List;
 
-public class TDBStore extends Store {
-    private Dataset dataset = TDBFactory.createDataset("./tdb/" + outputTopicName);
+public class TDBStore extends ActiveMQEnabled {
+    private Dataset dataset = TDBFactory.createDataset("./tdb/");
 
     public TDBStore(String inputTopicName) {
         super(inputTopicName, null);
@@ -34,8 +34,9 @@ public class TDBStore extends Store {
         } finally {
             model.leaveCriticalSection() ;
             dataset.end();
+            // FUTURE: log the database write
         }
 
-        return new ArrayList<>();
+        return super.processInputText(inputMessageText);
     }
 }
